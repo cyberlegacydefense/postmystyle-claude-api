@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <title>Watch Demo - PostMyStyle.ai</title>
+  <meta name="description" content="See PostMyStyle.ai in action. Watch how our AI-powered platform transforms salon marketing and helps generate new revenue streams.">
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 3rem;
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .header h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .nav-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .nav-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: white;
+    }
+
+    .video-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        padding: 3rem;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        animation: slideUp 1s ease-out 0.3s both;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto 2rem;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .video-wrapper video {
+        width: 100%;
+        height: auto;
+        display: block;
+        background: #000;
+    }
+
+    .video-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+        padding: 2rem 1rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .video-wrapper:hover .video-controls {
+        opacity: 1;
+    }
+
+    .play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 2rem;
+        color: #667eea;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .play-button:hover {
+        transform: translate(-50%, -50%) scale(1.1);
+        background: white;
+    }
+
+    .video-title {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .video-title h2 {
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .video-title p {
+        font-size: 1.1rem;
+        color: #666;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .demo-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .feature-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 15px;
+        transition: transform 0.3s ease;
+    }
+
+    .feature-item:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-item .icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-item h4 {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-item p {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .cta-section {
+        text-align: center;
+        margin-top: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 20px;
+        color: white;
+    }
+
+    .cta-section h3 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .video-placeholder {
+        aspect-ratio: 16/9;
+        background: linear-gradient(135deg, #333, #555);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        border-radius: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .demo-container {
+            padding: 1rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+        }
+
+        .video-section {
+            padding: 2rem;
+        }
+
+        .video-title h2 {
+            font-size: 1.8rem;
+        }
+
+        .demo-features {
+            grid-template-columns: 1fr;
+        }
+
+        .cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .play-button {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+    }
+  </style>
+</head>
+<body>
+<div class="demo-container">
+  <a href="index.html" class="nav-link">← Back to Home</a>
+
+  <div class="header">
+    <h1>See PostMyStyle.ai in Action</h1>
+    <p>Watch how our AI-powered platform transforms salon marketing and helps generate new revenue streams</p>
+  </div>
+
+  <div class="video-section">
+    <div class="video-title">
+      <h2>SalonSnapshot Demo</h2>
+      <p>Discover how PostMyStyle.ai layers seamlessly on top of your existing salon tools to unlock powerful marketing capabilities</p>
+    </div>
+
+    <div class="video-wrapper">
+      <video id="demoVideo" poster="assets/images/video-thumbnail.jpg" preload="metadata">
+        <source src="assets/videos/SalonSnapshot.mp4" type="video/mp4">
+        <div class="video-placeholder">
+          📹 Video: SalonSnapshot.mp4
+          <br><small>Place your demo video at assets/videos/SalonSnapshot.mp4</small>
+        </div>
+      </video>
+      <div class="play-button" onclick="playVideo()">
+        ▶️
+      </div>
+      <div class="video-controls">
+        <button onclick="togglePlayPause()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-right: 1rem;">⏯️</button>
+        <button onclick="toggleFullscreen()" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">⛶</button>
+      </div>
+    </div>
+
+    <div class="demo-features">
+      <div class="feature-item">
+        <div class="icon">🎨</div>
+        <h4>AI Content Generation</h4>
+        <p>See how AI creates personalized content for each client interaction</p>
+      </div>
+      <div class="feature-item">
+        <div class="icon">💬</div>
+        <h4>SMS Automation</h4>
+        <p>Watch automated SMS flows drive client engagement and reviews</p>
+      </div>
+      <div class="feature-item">
+        <div class="icon">📊</div>
+        <h4>Analytics Dashboard</h4>
+        <p>Explore the insights that help optimize your marketing performance</p>
+      </div>
+      <div class="feature-item">
+        <div class="icon">💰</div>
+        <h4>Revenue Tracking</h4>
+        <p>Learn how affiliate links and upsells generate new income streams</p>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h3>Ready to Transform Your Salon's Marketing?</h3>
+      <p>Start your free 7-day trial and see the results for yourself</p>
+      <div class="cta-buttons">
+        <a href="signup.html" class="btn btn-primary">Start Free Trial</a>
+        <a href="contact.html" class="btn btn-secondary">Schedule a Call</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const video = document.getElementById('demoVideo');
+  const playButton = document.querySelector('.play-button');
+
+  function playVideo() {
+      video.play();
+      playButton.style.display = 'none';
+  }
+
+  function togglePlayPause() {
+      if (video.paused) {
+          video.play();
+          playButton.style.display = 'none';
+      } else {
+          video.pause();
+          playButton.style.display = 'flex';
+      }
+  }
+
+  function toggleFullscreen() {
+      if (video.requestFullscreen) {
+          video.requestFullscreen();
+      } else if (video.webkitRequestFullscreen) {
+          video.webkitRequestFullscreen();
+      } else if (video.msRequestFullscreen) {
+          video.msRequestFullscreen();
+      }
+  }
+
+  // Show play button when video ends
+  video.addEventListener('ended', () => {
+      playButton.style.display = 'flex';
+  });
+
+  // Hide play button when video starts playing
+  video.addEventListener('play', () => {
+      playButton.style.display = 'none';
+  });
+
+  // Show play button when video is paused
+  video.addEventListener('pause', () => {
+      playButton.style.display = 'flex';
+  });
+
+  // Handle video loading error
+  video.addEventListener('error', (e) => {
+      console.log('Video loading error:', e);
+      const wrapper = document.querySelector('.video-wrapper');
+      wrapper.innerHTML = `
+          <div class="video-placeholder">
+              <div style="text-align: center;">
+                  <div style="font-size: 3rem; margin-bottom: 1rem;">📹</div>
+                  <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">Demo Video</div>
+                  <div style="font-size: 0.9rem; opacity: 0.8;">Place SalonSnapshot.mp4 in assets/videos/</div>
+              </div>
+          </div>
+      `;
+  });
+</script>
+</body>
+</html>

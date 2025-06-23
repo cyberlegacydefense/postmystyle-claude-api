@@ -1,0 +1,17 @@
+
+# Large media files (use external storage)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wmv
+
+# Mac system files
+.DS_Store
+*/.DS_Store
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo

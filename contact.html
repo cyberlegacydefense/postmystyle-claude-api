@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <title>Contact Us - PostMyStyle.ai</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem 0;
+            color: white;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .contact-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .contact-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .contact-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .contact-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .contact-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .main-contact {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            margin: 3rem 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-contact h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .main-contact p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .main-contact .contact-link {
+            background: white;
+            color: #667eea;
+            font-size: 1.2rem;
+            padding: 1.2rem 2.5rem;
+        }
+
+        .main-contact .contact-link:hover {
+            color: #667eea;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .faq-section {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-section h3 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #333;
+        }
+
+        .faq-item {
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-answer {
+            color: #666;
+        }
+
+        .response-time {
+            text-align: center;
+            background: #e8f4fd;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .response-time strong {
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-contact {
+                padding: 2rem;
+            }
+
+            .main-contact h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Get In Touch</h1>
+    <p>We're here to help you revolutionize your salon's marketing</p>
+</div>
+
+<div class="container">
+    <a href="index.html" class="nav-link">← Back to Home</a>
+
+    <div class="main-contact">
+        <h2>Need Help?</h2>
+        <p>Our support team is ready to assist you with any questions about PostMyStyle.ai</p>
+        <a href="mailto:help@postmystyle.ai" class="contact-link">Contact Support</a>
+    </div>
+
+    <div class="response-time">
+        <strong>Response Time:</strong> We typically respond within 4-6 hours during business hours (Monday-Friday, 9 AM - 6 PM EST)
+    </div>
+
+    <div class="contact-grid">
+        <div class="contact-card">
+            <div class="contact-icon">📧</div>
+            <h3>General Support</h3>
+            <p>Questions about your account, billing, or using PostMyStyle.ai</p>
+            <a href="mailto:help@postmystyle.ai" class="contact-link">help@postmystyle.ai</a>
+        </div>
+
+        <div class="contact-card">
+            <div class="contact-icon">💼</div>
+            <h3>Sales & Partnerships</h3>
+            <p>Interested in enterprise plans or partnership opportunities</p>
+            <a href="mailto:sales@postmystyle.ai" class="contact-link">sales@postmystyle.ai</a>
+        </div>
+
+        <div class="contact-card">
+            <div class="contact-icon">🛡️</div>
+            <h3>Privacy & Security</h3>
+            <p>Data requests, privacy questions, or security concerns</p>
+            <a href="mailto:privacy@postmystyle.ai" class="contact-link">privacy@postmystyle.ai</a>
+        </div>
+
+        <div class="contact-card">
+            <div class="contact-icon">🚀</div>
+            <h3>Feature Requests</h3>
+            <p>Suggestions for new features or improvements to our platform</p>
+            <a href="mailto:feedback@postmystyle.ai" class="contact-link">feedback@postmystyle.ai</a>
+        </div>
+    </div>
+
+    <div class="faq-section">
+        <h3>Frequently Asked Questions</h3>
+
+        <div class="faq-item">
+            <div class="faq-question">How quickly can I get started with PostMyStyle.ai?</div>
+            <div class="faq-answer">You can start generating content within minutes of signing up. Our 7-day free trial gives you full access to test all features.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Does PostMyStyle.ai integrate with my existing salon software?</div>
+            <div class="faq-answer">Yes! PostMyStyle.ai is designed to layer on top of your existing tools. We don't replace your booking or POS systems - we enhance your marketing capabilities.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What if I need help setting up my account?</div>
+            <div class="faq-answer">Our support team offers personalized onboarding for all new customers. Contact us at help@postmystyle.ai to schedule a setup call.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Can I cancel my subscription anytime?</div>
+            <div class="faq-answer">Absolutely! You can cancel your subscription at any time with no penalties. Your access continues until the end of your current billing period.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Do you offer custom plans for salon chains?</div>
+            <div class="faq-answer">Yes! Contact our sales team at sales@postmystyle.ai to discuss enterprise pricing and custom features for multi-location businesses.</div>
+        </div>
+    </div>
+
+    <div class="main-contact">
+        <h2>Ready to Transform Your Salon's Marketing?</h2>
+        <p>Join hundreds of salons already using PostMyStyle.ai to build stronger brands and generate more revenue</p>
+        <a href="signup.html" class="contact-link">Start Free Trial</a>
+    </div>
+</div>
+</body>
+</html>

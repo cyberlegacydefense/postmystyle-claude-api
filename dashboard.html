@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <title>Dashboard - PostMyStyle.ai</title>
+  <style>
+    html {
+        scroll-behavior: smooth;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: #f8f9fa;
+        scroll-behavior: smooth;
+        overflow-x: hidden;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1rem 0;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logo img {
+        height: 40px;
+        width: auto;
+    }
+
+    .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        padding-bottom: 4rem;
+        min-height: calc(100vh - 80px);
+    }
+
+    .welcome-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .welcome-section h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .welcome-section p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    /* AI BUSINESS ADVISOR STYLES */
+    .ai-advisor-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #FF6B35;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-advisor-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #FF6B35, #FF9800);
+        opacity: 0.1;
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+
+    .ai-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .ai-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .ai-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #FF6B35, #FF9800);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+        from { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
+        to { box-shadow: 0 0 20px rgba(255, 107, 53, 0.8); }
+    }
+
+    .ai-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .ai-subtitle {
+        font-size: 0.9rem;
+        color: #666;
+        margin: 0;
+    }
+
+    .ai-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .ai-action-btn {
+        background: #fff5f2;
+        border: 2px solid #FF6B35;
+        color: #FF6B35;
+        padding: 8px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .ai-action-btn:hover {
+        background: #FF6B35;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .ai-action-btn.active {
+        background: #FF6B35;
+        color: white;
+    }
+
+    .ai-refresh-btn {
+        background: #FF6B35;
+        border: none;
+        color: white;
+        padding: 10px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ai-refresh-btn:hover {
+        background: #FF5722;
+        transform: rotate(180deg);
+    }
+
+    .ai-refresh-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .ai-content {
+        background: #fff8f5;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #ffe0d6;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .ai-loading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #666;
+        font-style: italic;
+    }
+
+    .ai-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #FF6B35;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .ai-message {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #2d2d2d;
+        margin-bottom: 1rem;
+    }
+
+    .ai-message.truncated {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .ai-expand-btn {
+        background: none;
+        border: none;
+        color: #FF6B35;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 0;
+    }
+
+    .ai-expand-btn:hover {
+        text-decoration: underline;
+    }
+
+    .ai-quick-actions {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid #e0e0e0;
+    }
+
+    .quick-actions-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+    }
+
+    .quick-action-item {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .quick-action-item:hover {
+        border-color: #FF6B35;
+        background: #fff5f2;
+        transform: translateY(-2px);
+    }
+
+    .quick-action-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: white;
+    }
+
+    .quick-action-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .custom-question-section {
+        background: #f0f8ff;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #d0e8ff;
+        margin-bottom: 1rem;
+    }
+
+    .custom-question-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .question-input-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .question-input {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .question-send-btn {
+        background: #FF6B35;
+        border: none;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s ease;
+    }
+
+    .question-send-btn:hover {
+        background: #FF5722;
+    }
+
+    .question-send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .ai-stage-indicator {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 1rem;
+    }
+
+    .ai-stage-text {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .ai-last-updated {
+        font-size: 0.8rem;
+        color: #999;
+        font-style: italic;
+    }
+
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .stat-change {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        display: inline-block;
+    }
+
+    .stat-positive {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .stat-neutral {
+        background: #e2e3e5;
+        color: #6c757d;
+    }
+
+    .loading-stats {
+        opacity: 0.6;
+    }
+
+    .loading-stats .stat-number {
+        color: #ccc;
+    }
+
+    /* DRILL-DOWN MODAL STYLES */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        margin: 1rem;
+        position: relative;
+        transform: scale(0.8);
+        transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        padding: 5px;
+    }
+
+    .modal-close:hover {
+        color: #333;
+    }
+
+    .stylist-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #667eea;
+    }
+
+    .stylist-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stylist-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    .stylist-info h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.2rem;
+    }
+
+    .stylist-info p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .stylist-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+
+    .stylist-stat {
+        text-align: center;
+    }
+
+    .stylist-stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .stylist-stat-label {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .dashboard-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .dashboard-card p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .card-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .coming-soon {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border: 2px dashed #dee2e6;
+        color: #6c757d;
+        text-align: center;
+        padding: 3rem 2rem;
+        border-radius: 15px;
+        margin: 2rem 0;
+    }
+
+    .coming-soon h3 {
+        margin-bottom: 1rem;
+        color: #495057;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .header-container {
+            padding: 0 1rem;
+        }
+
+        .container {
+            padding: 1rem;
+        }
+
+        .welcome-section h1 {
+            font-size: 2rem;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ai-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .ai-actions {
+            order: -1;
+            align-self: flex-end;
+        }
+
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .question-input-row {
+            flex-direction: column;
+        }
+
+        .modal-content {
+            margin: 0.5rem;
+            max-height: 90vh;
+        }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-container">
+    <a href="dashboard.html" class="logo">
+      <img src="assets/images/postmystyletitle.png" alt="PostMyStyle.ai">
+    </a>
+    <div class="user-menu">
+      <div class="user-info">
+        <span>👤</span>
+        <span id="userName">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="welcome-section">
+    <h1 id="welcomeHeading">Loading Your Dashboard...</h1>
+    <p id="welcomeSubtext">Getting your salon analytics ready</p>
+  </div>
+
+  <!-- AI BUSINESS ADVISOR SECTION -->
+  <div class="ai-advisor-section" id="aiAdvisorSection" style="display: none;">
+    <div class="ai-header">
+      <div class="ai-header-left">
+        <div class="ai-icon">✨</div>
+        <div>
+          <h2 class="ai-title">AI Business Advisor</h2>
+          <p class="ai-subtitle">Personalized insights for your salon</p>
+        </div>
+      </div>
+      <div class="ai-actions">
+        <button class="ai-action-btn" id="quickActionsBtn" onclick="toggleQuickActions()">
+          💬 Quick Questions
+        </button>
+        <button class="ai-action-btn" id="customQuestionBtn" onclick="toggleCustomQuestion()">
+          ✏️ Ask Anything
+        </button>
+        <button class="ai-refresh-btn" id="refreshAiBtn" onclick="generateAIInsights(true)">
+          🔄
+        </button>
+      </div>
+    </div>
+
+    <!-- AI Content Area -->
+    <div class="ai-content" id="aiContent">
+      <div class="ai-loading" id="aiLoading" style="display: none;">
+        <div class="ai-spinner"></div>
+        <span>Generating personalized business insights...</span>
+      </div>
+      <div id="aiMessage" style="display: none;">
+        <div class="ai-message" id="aiMessageText"></div>
+        <button class="ai-expand-btn" id="aiExpandBtn" style="display: none;" onclick="toggleAIMessage()">
+          <span id="expandText">Read More</span> <span id="expandIcon">▼</span>
+        </button>
+      </div>
+      <div id="aiWelcome">
+        <p style="text-align: center; color: #666; margin-bottom: 1rem;">
+          👋 Welcome! Click the refresh button above to get personalized business insights based on your salon's performance data.
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="ai-quick-actions" id="quickActionsSection" style="display: none;">
+      <div class="quick-actions-title">Get instant advice about:</div>
+      <div class="quick-actions-grid">
+        <div class="quick-action-item" onclick="askQuickQuestion('revenue')">
+          <div class="quick-action-icon" style="background: #4CAF50;">💰</div>
+          <div class="quick-action-text">Increasing Revenue</div>
+        </div>
+        <div class="quick-action-item" onclick="askQuickQuestion('clients')">
+          <div class="quick-action-icon" style="background: #2196F3;">👥</div>
+          <div class="quick-action-text">Client Acquisition</div>
+        </div>
+        <div class="quick-action-item" onclick="askQuickQuestion('team')">
+          <div class="quick-action-icon" style="background: #FF9800;">⭐</div>
+          <div class="quick-action-text">Team Performance</div>
+        </div>
+        <div class="quick-action-item" onclick="askQuickQuestion('marketing')">
+          <div class="quick-action-icon" style="background: #E91E63;">📱</div>
+          <div class="quick-action-text">Marketing Strategy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Question -->
+    <div class="custom-question-section" id="customQuestionSection" style="display: none;">
+      <div class="custom-question-title">Ask your own question:</div>
+      <div class="question-input-row">
+        <textarea class="question-input" id="customQuestionInput" placeholder="e.g., How can we improve our Instagram engagement?" maxlength="300"></textarea>
+        <button class="question-send-btn" id="questionSendBtn" onclick="askCustomQuestion()">Send</button>
+      </div>
+      <p style="font-size: 0.85rem; color: #666; margin: 0;">💡 I'll analyze your salon's data to provide personalized advice</p>
+    </div>
+
+    <!-- AI Stage Indicator -->
+    <div class="ai-stage-indicator">
+      <span class="ai-stage-text" id="aiStageText">Business Stage: Growing Salon</span>
+      <span class="ai-last-updated" id="aiLastUpdated"></span>
+    </div>
+  </div>
+
+  <div class="stats-section" id="statsSection">
+    <div class="stat-card loading-stats" onclick="openDrillDown('stylists')">
+      <div class="stat-number" id="totalStylists">-</div>
+      <div class="stat-label">Total Stylists</div>
+      <div class="stat-change stat-neutral" id="stylistsChange">Loading...</div>
+    </div>
+    <div class="stat-card loading-stats" onclick="openDrillDown('clients')">
+      <div class="stat-number" id="totalClients">-</div>
+      <div class="stat-label">Total Clients</div>
+      <div class="stat-change stat-neutral" id="clientsChange">Loading...</div>
+    </div>
+    <div class="stat-card loading-stats" onclick="openDrillDown('posts')">
+      <div class="stat-number" id="totalShares">-</div>
+      <div class="stat-label">AI Posts Generated</div>
+      <div class="stat-change stat-neutral" id="sharesChange">Loading...</div>
+    </div>
+    <div class="stat-card loading-stats" onclick="openDrillDown('views')">
+      <div class="stat-number" id="totalViews">-</div>
+      <div class="stat-label">Total Views</div>
+      <div class="stat-change stat-neutral" id="viewsChange">Loading...</div>
+    </div>
+    <div class="stat-card loading-stats" onclick="openDrillDown('engagement')">
+      <div class="stat-number" id="engagementRate">-</div>
+      <div class="stat-label">Engagement Rate</div>
+      <div class="stat-change stat-neutral" id="engagementChange">Loading...</div>
+    </div>
+    <div class="stat-card loading-stats" onclick="openDrillDown('products')">
+      <div class="stat-number" id="productClicks">-</div>
+      <div class="stat-label">Product Clicks</div>
+      <div class="stat-change stat-neutral" id="productChange">Loading...</div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <div class="card-icon">🎨</div>
+      <h3>Content Generator</h3>
+      <p>Create AI-powered posts and content for your salon's social media and marketing campaigns.</p>
+      <a href="#" class="card-btn">Generate Content</a>
+    </div>
+
+    <div class="dashboard-card">
+      <div class="card-icon">💬</div>
+      <h3>SMS Campaigns</h3>
+      <p>Set up automated SMS flows to engage clients after their visits and drive repeat bookings.</p>
+      <a href="#" class="card-btn">Manage SMS</a>
+    </div>
+
+    <div class="dashboard-card">
+      <div class="card-icon">📊</div>
+      <h3>Analytics</h3>
+      <p>Track your marketing performance, client engagement, and revenue generated from campaigns.</p>
+      <a href="#" class="card-btn">View Analytics</a>
+    </div>
+
+    <div class="dashboard-card">
+      <div class="card-icon">👥</div>
+      <h3>Client Management</h3>
+      <p>Manage your client database, preferences, and interaction history for personalized marketing.</p>
+      <a href="#" class="card-btn">Manage Clients</a>
+    </div>
+
+    <div class="dashboard-card">
+      <div class="card-icon">💰</div>
+      <h3>Revenue Tracking</h3>
+      <p>Monitor affiliate commissions, upsell performance, and additional revenue streams.</p>
+      <a href="#" class="card-btn">View Revenue</a>
+    </div>
+
+    <div class="dashboard-card">
+      <div class="card-icon">⚙️</div>
+      <h3>Settings</h3>
+      <p>Configure your salon profile, brand settings, team members, and integration preferences.</p>
+      <a href="#" class="card-btn">Manage Settings</a>
+    </div>
+  </div>
+
+  <div class="coming-soon">
+    <h3>🚀 Full Dashboard Experience</h3>
+    <p>Your analytics are now showing real data from your salon! More advanced features are coming soon. Contact our support team at <strong>help@postmystyle.ai</strong> for assistance.</p>
+  </div>
+</div>
+
+<!-- Drill-Down Modal -->
+<div class="modal-overlay" id="drillDownModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Stylist Details</h2>
+      <button class="modal-close" onclick="closeDrillDown()">×</button>
+    </div>
+    <div id="modalContent">
+      <!-- Content will be populated by JavaScript -->
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Supabase Configuration
+  const supabaseUrl = 'https://mffqaqvjylkotkgvytro.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZnFhcXZqeWxrb3RrZ3Z5dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTI5MzYsImV4cCI6MjA2MTY4ODkzNn0.oUlS-JS1G9OHjwv89xZY_QRqwsoI-GE8c-ZE_U2TjDc';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  // Global variables
+  let currentUser = null;
+  let salonData = null;
+  let aiMessageFull = '';
+  let aiMessageTruncated = '';
+  let isAIExpanded = false;
+  let stylistsData = [];
+
+  // AI-related variables
+  let lastAIGeneration = 0;
+  let isGeneratingAI = false;
+
+  // Load user info and salon analytics
+  async function loadDashboard() {
+      try {
+          // Get current user
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+          if (userError || !user) {
+              console.log('No authenticated user, redirecting to login');
+              window.location.href = 'login.html';
+              return;
+          }
+
+          currentUser = user;
+          console.log('Current user:', user.id);
+
+          // Update user name in header
+          const userName = `${user.user_metadata?.first_name || 'User'} ${user.user_metadata?.last_name || ''}`.trim();
+          document.getElementById('userName').textContent = userName;
+
+          // Get user's salon information
+          const { data: userSalon, error: salonError } = await supabase
+              .from('user_salon_view')
+              .select('*')
+              .eq('user_id', user.id)
+              .single();
+
+          if (salonError || !userSalon) {
+              console.log('No salon found for user, they may need to complete onboarding');
+              showErrorState('No salon profile found. Please complete your salon setup.');
+              return;
+          }
+
+          salonData = userSalon;
+          console.log('Salon data:', salonData);
+
+          // Update welcome section
+          document.getElementById('welcomeHeading').textContent = `Welcome back, ${userName}!`;
+          document.getElementById('welcomeSubtext').textContent = `${salonData.salon_name} Dashboard`;
+
+          // Show AI Advisor section
+          document.getElementById('aiAdvisorSection').style.display = 'block';
+
+          // Load and display analytics
+          await loadSalonAnalytics(salonData.salon_id);
+
+          // Load stylists data for drill-down
+          await loadStylistsData(salonData.salon_id);
+
+      } catch (error) {
+          console.error('Error loading dashboard:', error);
+          showErrorState('Failed to load dashboard data. Please refresh the page.');
+      }
+  }
+
+  // Load detailed stylists data for drill-down functionality
+  async function loadStylistsData(salonId) {
+      try {
+          const { data: stylists, error } = await supabase
+              .from('stylists')
+              .select('*')
+              .eq('salon_id', salonId);
+
+          if (error) throw error;
+
+          // For each stylist, get their analytics
+          stylistsData = await Promise.all(stylists.map(async (stylist) => {
+              // Get media sends
+              const { data: mediaSends } = await supabase
+                  .from('media_send')
+                  .select('*')
+                  .eq('stylist_id', stylist.id);
+
+              // Get unique clients
+              const { data: clients } = await supabase
+                  .from('stylist_clients')
+                  .select('client_id')
+                  .eq('stylist_id', stylist.id);
+
+              const totalPosts = mediaSends?.length || 0;
+              const totalViews = mediaSends?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
+              const totalClients = clients?.length || 0;
+              const engagementRate = totalPosts > 0 ? Math.round(((mediaSends?.reduce((sum, ms) => sum + (ms.share_instagram || 0) + (ms.share_facebook || 0) + (ms.share_tiktok || 0), 0) || 0) / totalPosts) * 100) : 0;
+
+              return {
+                  ...stylist,
+                  totalPosts,
+                  totalViews,
+                  totalClients,
+                  engagementRate
+              };
+          }));
+
+          console.log('Stylists data loaded:', stylistsData);
+      } catch (error) {
+          console.error('Error loading stylists data:', error);
+      }
+  }
+
+  // Load salon analytics data
+  async function loadSalonAnalytics(salonId) {
+      try {
+          console.log('Loading analytics for salon:', salonId);
+
+          // Get salon analytics from the view we created
+          const { data: analyticsData, error: analyticsError } = await supabase
+              .from('salon_analytics_view')
+              .select('*')
+              .eq('salon_id', salonId)
+              .single();
+
+          if (analyticsError) {
+              console.log('Analytics view error:', analyticsError);
+              // If view doesn't exist, calculate manually
+              await loadSalonAnalyticsManual(salonId);
+              return;
+          }
+
+          console.log('Analytics data:', analyticsData);
+          displayAnalytics(analyticsData);
+
+      } catch (error) {
+          console.error('Error loading salon analytics:', error);
+          await loadSalonAnalyticsManual(salonId);
+      }
+  }
+
+  // Fallback: Calculate analytics manually if view doesn't work
+  async function loadSalonAnalyticsManual(salonId) {
+      try {
+          console.log('Calculating analytics manually for salon:', salonId);
+
+          // Get stylists count
+          const { data: stylists, error: stylistsError } = await supabase
+              .from('stylists')
+              .select('id')
+              .eq('salon_id', salonId);
+
+          // Get total clients through stylist relationships
+          const { data: clients, error: clientsError } = await supabase
+              .from('stylist_clients')
+              .select('client_id, stylists!inner(salon_id)')
+              .eq('stylists.salon_id', salonId);
+
+          // Get media sends (posts) from salon stylists
+          const { data: mediaSends, error: mediaError } = await supabase
+              .from('media_send')
+              .select('*, stylists!inner(salon_id)')
+              .eq('stylists.salon_id', salonId);
+
+          // Get product interactions
+          const { data: productInteractions, error: productError } = await supabase
+              .from('product_interactions')
+              .select('*, media_send!inner(*, stylists!inner(salon_id))')
+              .eq('media_send.stylists.salon_id', salonId);
+
+          // Calculate metrics
+          const totalStylists = stylists?.length || 0;
+          const totalClients = clients ? new Set(clients.map(c => c.client_id)).size : 0;
+          const totalShares = mediaSends?.length || 0;
+          const totalViews = mediaSends?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
+          const totalInstagram = mediaSends?.reduce((sum, ms) => sum + (ms.share_instagram || 0), 0) || 0;
+          const totalFacebook = mediaSends?.reduce((sum, ms) => sum + (ms.share_facebook || 0), 0) || 0;
+          const totalTikTok = mediaSends?.reduce((sum, ms) => sum + (ms.share_tiktok || 0), 0) || 0;
+          const totalProductClicks = productInteractions?.length || 0;
+
+          const analyticsData = {
+              total_stylists: totalStylists,
+              total_clients: totalClients,
+              total_media_sends: totalShares,
+              total_clicks: totalViews,
+              total_instagram_shares: totalInstagram,
+              total_facebook_shares: totalFacebook,
+              total_tiktok_shares: totalTikTok,
+              total_product_clicks: totalProductClicks
+          };
+
+          console.log('Manual analytics calculated:', analyticsData);
+          displayAnalytics(analyticsData);
+
+      } catch (error) {
+          console.error('Error calculating manual analytics:', error);
+          showErrorState('Unable to load analytics data.');
+      }
+  }
+
+  // Display analytics data in the UI
+  function displayAnalytics(data) {
+      // Remove loading states
+      document.querySelectorAll('.stat-card').forEach(card => {
+          card.classList.remove('loading-stats');
+      });
+
+      // Update stat numbers
+      document.getElementById('totalStylists').textContent = data.total_stylists || 0;
+      document.getElementById('totalClients').textContent = data.total_clients || 0;
+      document.getElementById('totalShares').textContent = data.total_media_sends || 0;
+      document.getElementById('totalViews').textContent = data.total_clicks || 0;
+      document.getElementById('productClicks').textContent = data.total_product_clicks || 0;
+
+      // Calculate engagement rate
+      const totalSocial = (data.total_instagram_shares || 0) + (data.total_facebook_shares || 0) + (data.total_tiktok_shares || 0);
+      const engagementRate = data.total_media_sends > 0 ? Math.round((totalSocial / data.total_media_sends) * 100) : 0;
+      document.getElementById('engagementRate').textContent = `${engagementRate}%`;
+
+      // Update change indicators
+      updateChangeIndicators(data);
+
+      console.log('Analytics displayed successfully');
+  }
+
+  // Update change indicators with encouraging messages
+  function updateChangeIndicators(data) {
+      const changes = {
+          stylistsChange: data.total_stylists > 0 ? 'Team Building' : 'Add First Stylist',
+          clientsChange: data.total_clients > 0 ? `${data.total_clients} and Growing` : 'Start Building',
+          sharesChange: data.total_media_sends > 0 ? 'Content Creation Active' : 'Ready to Post',
+          viewsChange: data.total_clicks > 0 ? 'Audience Engaged' : 'Audience Ready',
+          engagementChange: data.total_media_sends > 0 ? 'Social Active' : 'Ready to Share',
+          productChange: data.total_product_clicks > 0 ? 'Sales Converting' : 'Products Ready'
+      };
+
+      Object.entries(changes).forEach(([id, text]) => {
+          const element = document.getElementById(id);
+          if (element) {
+              element.textContent = text;
+              element.className = data.total_media_sends > 0 ? 'stat-change stat-positive' : 'stat-change stat-neutral';
+          }
+      });
+  }
+
+  // AI BUSINESS ADVISOR FUNCTIONS
+
+  function getSalonBusinessStage(analytics) {
+      if (!analytics) return 'startup';
+
+      const totalStylists = analytics.totalStylists || 0;
+      const totalClients = analytics.totalClients || 0;
+      const totalPosts = analytics.totalShares || 0;
+
+      if (totalStylists <= 2 && totalClients < 50 && totalPosts < 100) return 'startup';
+      if (totalStylists <= 5 && totalClients < 200 && totalPosts < 500) return 'growing';
+      if (totalStylists <= 10 && totalClients < 500 && totalPosts < 1500) return 'established';
+      return 'enterprise';
+  }
+
+  async function generateAIInsights(isManual = false) {
+      // Prevent rapid API calls
+      const now = Date.now();
+      if (!isManual && (now - lastAIGeneration) < 30000) {
+          console.log('AI generation skipped - too soon');
+          return;
+      }
+
+      if (isGeneratingAI) {
+          console.log('AI generation already in progress');
+          return;
+      }
+
+      isGeneratingAI = true;
+      lastAIGeneration = now;
+
+      // Show loading state
+      document.getElementById('aiLoading').style.display = 'flex';
+      document.getElementById('aiMessage').style.display = 'none';
+      document.getElementById('aiWelcome').style.display = 'none';
+      document.getElementById('refreshAiBtn').disabled = true;
+
+      try {
+          // Get current analytics data
+          const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
+          const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
+          const totalPosts = parseInt(document.getElementById('totalShares').textContent) || 0;
+          const totalViews = parseInt(document.getElementById('totalViews').textContent) || 0;
+          const engagementRate = parseInt(document.getElementById('engagementRate').textContent) || 0;
+          const productClicks = parseInt(document.getElementById('productClicks').textContent) || 0;
+
+          const analyticsData = {
+              total_stylists: totalStylists,
+              total_clients: totalClients,
+              total_media_sends: totalPosts,
+              total_clicks: totalViews,
+              engagement_rate: engagementRate,
+              total_product_clicks: productClicks
+          };
+
+          const stage = getSalonBusinessStage(analyticsData);
+          const salonName = salonData?.salon_name || 'your salon';
+
+          // Create prompt for salon business advisor
+          const prompt = `You are an AI business advisor for ${salonName}, a salon business using PostMyStyle.AI. Always start your response with the salon owner's name or "${salonName}," to personalize the message. Keep responses conversational, encouraging, and under 150 words.
+
+          Current salon metrics:
+          - ${totalStylists} stylists on the team
+          - ${totalClients} total clients
+          - ${totalPosts} AI posts generated
+          - ${totalViews} total views/clicks
+          - ${engagementRate}% engagement rate
+          - ${productClicks} product clicks
+
+          Business stage: ${stage}
+
+          Provide 2-3 specific, actionable business insights for growing this salon business. Focus on team management, client acquisition, revenue optimization, and marketing strategies. Include one specific next action they should take.`;
+
+          console.log('Calling AI with salon business insights...');
+
+          // Call AI service with overview action type
+          const response = await callAIService('', 'overview');
+
+          displayAIMessage(response);
+          updateAIStage(stage);
+
+      } catch (error) {
+          console.error('AI generation failed:', error);
+
+          // Fallback message based on salon data
+          const fallbackMessage = generateFallbackMessage();
+          displayAIMessage(fallbackMessage);
+
+      } finally {
+          isGeneratingAI = false;
+          document.getElementById('aiLoading').style.display = 'none';
+          document.getElementById('refreshAiBtn').disabled = false;
+      }
+  }
+
+  async function callAIService(prompt, actionType = 'overview') {
+      // Call your Netlify function here
+      try {
+          // Get current analytics data for the AI function
+          const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
+          const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
+          const totalShares = parseInt(document.getElementById('totalShares').textContent) || 0;
+          const totalViews = parseInt(document.getElementById('totalViews').textContent) || 0;
+          const engagementRate = parseInt(document.getElementById('engagementRate').textContent) || 0;
+
+          const analyticsData = {
+              totalStylists,
+              totalClients,
+              totalShares,
+              totalViews,
+              engagementRate
+          };
+
+          const ownerName = `${currentUser?.user_metadata?.first_name || 'Owner'} ${currentUser?.user_metadata?.last_name || ''}`.trim();
+          const salonName = salonData?.salon_name || 'Your Salon';
+
+          const response = await fetch('/.netlify/functions/salon-ai', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                  prompt: prompt,
+                  salonData: analyticsData,
+                  ownerName: ownerName,
+                  salonName: salonName,
+                  actionType: actionType
+              })
+          });
+
+          if (!response.ok) {
+              throw new Error(`AI service error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.message || data.response || 'AI service response received successfully.';
+
+      } catch (error) {
+          console.error('AI service call failed:', error);
+          throw error;
+      }
+  }
+
+  function generateFallbackMessage() {
+      const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
+      const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
+      const totalPosts = parseInt(document.getElementById('totalShares').textContent) || 0;
+      const salonName = salonData?.salon_name || 'Your salon';
+
+      if (totalStylists === 0) {
+          return `${salonName}, you're just getting started! Focus on adding your first stylist and creating your salon profile. Once you have team members using PostMyStyle.AI, you'll unlock powerful analytics and growth insights. Start by inviting your stylists to join the platform! 🚀`;
+      } else if (totalClients < 20) {
+          return `${salonName}, great progress with ${totalStylists} stylist${totalStylists > 1 ? 's' : ''} on your team! Focus on building your client base through consistent social media posting and referral programs. Encourage your stylists to share before/after photos to showcase your work. Your ${totalPosts} posts are a great start! 💪`;
+      } else {
+          return `${salonName}, you're building momentum with ${totalStylists} stylists serving ${totalClients} clients! Your ${totalPosts} AI-generated posts show strong content creation. Focus on converting social engagement into bookings and consider premium service offerings to increase revenue per client. Keep up the excellent work! ⭐`;
+      }
+  }
+
+  function displayAIMessage(message) {
+      aiMessageFull = message;
+
+      // Truncate message if too long
+      if (message.length > 200) {
+          aiMessageTruncated = message.substring(0, 200) + '...';
+          document.getElementById('aiExpandBtn').style.display = 'flex';
+      } else {
+          aiMessageTruncated = message;
+          document.getElementById('aiExpandBtn').style.display = 'none';
+      }
+
+      document.getElementById('aiMessageText').textContent = isAIExpanded ? aiMessageFull : aiMessageTruncated;
+      document.getElementById('aiMessage').style.display = 'block';
+      document.getElementById('aiWelcome').style.display = 'none';
+
+      // Update last updated time
+      const now = new Date();
+      document.getElementById('aiLastUpdated').textContent = `Updated: ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+  }
+
+  function updateAIStage(stage) {
+      const stageLabels = {
+          startup: 'Startup Salon',
+          growing: 'Growing Business',
+          established: 'Established Salon',
+          enterprise: 'Enterprise Operation'
+      };
+
+      document.getElementById('aiStageText').textContent = `Business Stage: ${stageLabels[stage] || 'Growing Salon'}`;
+  }
+
+  function toggleAIMessage() {
+      isAIExpanded = !isAIExpanded;
+      document.getElementById('aiMessageText').textContent = isAIExpanded ? aiMessageFull : aiMessageTruncated;
+      document.getElementById('expandText').textContent = isAIExpanded ? 'Show Less' : 'Read More';
+      document.getElementById('expandIcon').textContent = isAIExpanded ? '▲' : '▼';
+  }
+
+  function toggleQuickActions() {
+      const section = document.getElementById('quickActionsSection');
+      const btn = document.getElementById('quickActionsBtn');
+      const customSection = document.getElementById('customQuestionSection');
+      const customBtn = document.getElementById('customQuestionBtn');
+
+      if (section.style.display === 'none' || section.style.display === '') {
+          section.style.display = 'block';
+          btn.classList.add('active');
+          // Hide custom question section
+          customSection.style.display = 'none';
+          customBtn.classList.remove('active');
+      } else {
+          section.style.display = 'none';
+          btn.classList.remove('active');
+      }
+  }
+
+  function toggleCustomQuestion() {
+      const section = document.getElementById('customQuestionSection');
+      const btn = document.getElementById('customQuestionBtn');
+      const quickSection = document.getElementById('quickActionsSection');
+      const quickBtn = document.getElementById('quickActionsBtn');
+
+      if (section.style.display === 'none' || section.style.display === '') {
+          section.style.display = 'block';
+          btn.classList.add('active');
+          // Hide quick actions section
+          quickSection.style.display = 'none';
+          quickBtn.classList.remove('active');
+          // Focus on input
+          document.getElementById('customQuestionInput').focus();
+      } else {
+          section.style.display = 'none';
+          btn.classList.remove('active');
+      }
+  }
+
+  async function askQuickQuestion(topic) {
+      const quickActionTypes = {
+          revenue: 'increase-revenue',
+          clients: 'marketing-strategy',
+          team: 'team-performance',
+          marketing: 'marketing-strategy'
+      };
+
+      // Hide quick actions
+      document.getElementById('quickActionsSection').style.display = 'none';
+      document.getElementById('quickActionsBtn').classList.remove('active');
+
+      // Show loading and call AI
+      document.getElementById('aiLoading').style.display = 'flex';
+      document.getElementById('aiMessage').style.display = 'none';
+
+      try {
+          const actionType = quickActionTypes[topic] || topic;
+          const response = await callAIService('', actionType);
+          displayAIMessage(response);
+      } catch (error) {
+          console.error('Quick question failed:', error);
+          const fallback = generateQuickFallback(topic);
+          displayAIMessage(fallback);
+      }
+  }
+
+  async function askCustomQuestion() {
+      const question = document.getElementById('customQuestionInput').value.trim();
+      if (!question) {
+          alert('Please enter a question first.');
+          return;
+      }
+
+      // Hide custom section
+      document.getElementById('customQuestionSection').style.display = 'none';
+      document.getElementById('customQuestionBtn').classList.remove('active');
+
+      // Clear input
+      document.getElementById('customQuestionInput').value = '';
+
+      // Show loading and call AI
+      document.getElementById('aiLoading').style.display = 'flex';
+      document.getElementById('aiMessage').style.display = 'none';
+
+      try {
+          // Pass the question as the actionType for custom questions
+          const response = await callAIService('', question);
+          displayAIMessage(response);
+      } catch (error) {
+          console.error('Custom question failed:', error);
+          const salonName = salonData?.salon_name || 'Your salon';
+          const fallback = `${salonName}, thank you for your question: "${question}". Based on your current metrics, I recommend focusing on consistent growth strategies. Your salon is making great progress! Try the quick action buttons for specific business advice.`;
+          displayAIMessage(fallback);
+      }
+  }
+
+  function generateQuickFallback(topic) {
+      const salonName = salonData?.salon_name || 'Your salon';
+      const fallbacks = {
+          revenue: `${salonName}, to increase revenue: 1) Introduce premium services and packages, 2) Implement referral rewards for existing clients, 3) Focus on retail product sales after each service. Your stylists can showcase products in their social posts!`,
+          clients: `${salonName}, to attract clients: 1) Encourage stylists to post before/after photos consistently, 2) Create limited-time new client promotions, 3) Partner with local businesses for cross-promotion. Social media consistency is key!`,
+          team: `${salonName}, for team performance: 1) Set monthly social posting goals for each stylist, 2) Implement performance bonuses tied to client retention, 3) Provide ongoing training on social media best practices. Support your team's growth!`,
+          marketing: `${salonName}, for marketing: 1) Post client transformations daily across all platforms, 2) Create hashtag campaigns specific to your salon, 3) Engage with local community events and influencers. Consistency builds brand recognition!`
+      };
+      return fallbacks[topic] || fallbacks.revenue;
+  }
+
+  // DRILL-DOWN FUNCTIONALITY
+
+  function openDrillDown(type) {
+      if (!stylistsData || stylistsData.length === 0) {
+          alert('Stylist data is still loading. Please try again in a moment.');
+          return;
+      }
+
+      const modal = document.getElementById('drillDownModal');
+      const title = document.getElementById('modalTitle');
+      const content = document.getElementById('modalContent');
+
+      switch(type) {
+          case 'stylists':
+              title.textContent = 'Stylist Performance';
+              content.innerHTML = generateStylistDrillDown();
+              break;
+          case 'clients':
+              title.textContent = 'Client Breakdown by Stylist';
+              content.innerHTML = generateClientDrillDown();
+              break;
+          case 'posts':
+              title.textContent = 'Post Activity by Stylist';
+              content.innerHTML = generatePostDrillDown();
+              break;
+          case 'views':
+              title.textContent = 'View Performance by Stylist';
+              content.innerHTML = generateViewDrillDown();
+              break;
+          case 'engagement':
+              title.textContent = 'Engagement by Stylist';
+              content.innerHTML = generateEngagementDrillDown();
+              break;
+          case 'products':
+              title.textContent = 'Product Performance';
+              content.innerHTML = generateProductDrillDown();
+              break;
+      }
+
+      modal.classList.add('active');
+  }
+
+  function closeDrillDown() {
+      document.getElementById('drillDownModal').classList.remove('active');
+  }
+
+  function generateStylistDrillDown() {
+      return stylistsData.map(stylist => `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                  <div class="stylist-info">
+                      <h3>${stylist.stylist_name}</h3>
+                      <p>${stylist.email || 'No email provided'}</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts}</div>
+                      <div class="stylist-stat-label">Posts</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalViews}</div>
+                      <div class="stylist-stat-label">Views</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalClients}</div>
+                      <div class="stylist-stat-label">Clients</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.engagementRate}%</div>
+                      <div class="stylist-stat-label">Engagement</div>
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  function generateClientDrillDown() {
+      return stylistsData.map(stylist => `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                  <div class="stylist-info">
+                      <h3>${stylist.stylist_name}</h3>
+                      <p>${stylist.totalClients} clients served</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalClients}</div>
+                      <div class="stylist-stat-label">Total Clients</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalClients / stylist.totalPosts * 10) / 10 : 0}</div>
+                      <div class="stylist-stat-label">Clients per Post</div>
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  function generatePostDrillDown() {
+      return stylistsData.map(stylist => `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                  <div class="stylist-info">
+                      <h3>${stylist.stylist_name}</h3>
+                      <p>${stylist.totalPosts} posts created</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts}</div>
+                      <div class="stylist-stat-label">Total Posts</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalViews / stylist.totalPosts) : 0}</div>
+                      <div class="stylist-stat-label">Avg Views per Post</div>
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  function generateViewDrillDown() {
+      return stylistsData.map(stylist => `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                  <div class="stylist-info">
+                      <h3>${stylist.stylist_name}</h3>
+                      <p>${stylist.totalViews} total views</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalViews}</div>
+                      <div class="stylist-stat-label">Total Views</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalViews / stylist.totalPosts) : 0}</div>
+                      <div class="stylist-stat-label">Views per Post</div>
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  function generateEngagementDrillDown() {
+      return stylistsData.map(stylist => `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                  <div class="stylist-info">
+                      <h3>${stylist.stylist_name}</h3>
+                      <p>${stylist.engagementRate}% engagement rate</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.engagementRate}%</div>
+                      <div class="stylist-stat-label">Engagement Rate</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts}</div>
+                      <div class="stylist-stat-label">Posts Created</div>
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  function generateProductDrillDown() {
+      return `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar">📦</div>
+                  <div class="stylist-info">
+                      <h3>Product Analytics</h3>
+                      <p>Coming soon - detailed product performance by stylist</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${document.getElementById('productClicks').textContent}</div>
+                      <div class="stylist-stat-label">Total Clicks</div>
+                  </div>
+              </div>
+          </div>
+      `;
+  }
+
+  // Show error state
+  function showErrorState(message) {
+      const statsSection = document.getElementById('statsSection');
+      statsSection.innerHTML = `
+          <div class="error-message" style="grid-column: 1 / -1;">
+              <strong>⚠️ ${message}</strong><br>
+              <small>Try refreshing the page or contact support if the issue persists.</small>
+          </div>
+      `;
+  }
+
+  // Logout function
+  async function logout() {
+      console.log('Logging out...');
+
+      try {
+          // Sign out from Supabase
+          const { error } = await supabase.auth.signOut();
+
+          if (error) {
+              console.error('Logout error:', error);
+          }
+      } catch (error) {
+          console.error('Logout error:', error);
+      }
+
+      // Clear stored authentication data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('salonInfo');
+
+      // Clear session storage
+      sessionStorage.clear();
+
+      console.log('Logout complete, redirecting...');
+
+      // Redirect to home page
+      window.location.href = 'index.html';
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('drillDownModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+          closeDrillDown();
+      }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+          closeDrillDown();
+      }
+  });
+
+  // Allow Enter key to send custom question
+  document.getElementById('customQuestionInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          askCustomQuestion();
+      }
+  });
+
+  // Initialize dashboard when page loads
+  document.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+  });
+
+  // Refresh analytics every 5 minutes
+  setInterval(() => {
+      if (salonData) {
+          loadSalonAnalytics(salonData.salon_id);
+      }
+  }, 5 * 60 * 1000);
+</script>
+</body>
+</html>

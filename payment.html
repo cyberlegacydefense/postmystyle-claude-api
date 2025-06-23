@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <title>Complete Your Purchase - PostMyStyle.ai</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .payment-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .payment-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .payment-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .payment-header p {
+        opacity: 0.9;
+    }
+
+    .payment-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .plan-summary {
+        padding: 2rem;
+        background: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+
+    .plan-summary h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .plan-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .plan-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+    }
+
+    .plan-features li {
+        padding: 0.25rem 0;
+        color: #666;
+    }
+
+    .payment-form {
+        padding: 2rem;
+    }
+
+    .payment-form h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    input {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .stripe-element {
+        padding: 1rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        transition: border-color 0.3s ease;
+    }
+
+    .stripe-element.focused {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .stripe-element.invalid {
+        border-color: #e74c3c;
+    }
+
+    .card-errors {
+        color: #e74c3c;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: none;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .loading {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .security-note {
+        background: #e8f4fd;
+        border: 1px solid #667eea;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .trial-notice {
+        background: #d4edda;
+        border: 1px solid #28a745;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        color: #155724;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .payment-content {
+            grid-template-columns: 1fr;
+        }
+
+        .plan-summary {
+            border-right: none;
+            border-bottom: 1px solid #e9ecef;
+        }
+    }
+  </style>
+</head>
+<body>
+<div class="payment-container">
+  <div class="payment-header">
+    <h1>Complete Your Subscription</h1>
+    <p>Start your 7-day free trial today</p>
+  </div>
+
+  <div class="payment-content">
+    <div class="plan-summary">
+      <div class="trial-notice">
+        <strong>7-Day Free Trial</strong><br>
+        You won't be charged until your trial ends
+      </div>
+
+      <h3>Your Plan</h3>
+      <div class="plan-card" id="planCard">
+        <div class="plan-name" id="planName">Salon Pro</div>
+        <div class="plan-price" id="planPrice">$79<span style="font-size: 1rem;">/month</span></div>
+        <ul class="plan-features" id="planFeatures">
+          <li>✓ 500 AI-generated posts/month</li>
+          <li>✓ Premium SMS flows</li>
+          <li>✓ Priority support</li>
+          <li>✓ Unlimited brand presets</li>
+          <li>✓ Analytics dashboard</li>
+          <li>✓ Affiliate link integration</li>
+          <li>✓ Multi-stylist management</li>
+        </ul>
+      </div>
+
+      <div class="security-note">
+        <strong>🔒 Secure Payment</strong><br>
+        Your payment information is encrypted and secure. We use Stripe for payment processing.
+      </div>
+    </div>
+
+    <div class="payment-form">
+      <h3>Payment Information</h3>
+
+      <form id="payment-form">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" required readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="cardholder-name">Cardholder Name</label>
+          <input type="text" id="cardholder-name" name="cardholderName" required>
+        </div>
+
+        <div class="form-group">
+          <label for="card-element">Card Information</label>
+          <div id="card-element" class="stripe-element">
+            <!-- Stripe Elements will create form elements here -->
+          </div>
+          <div id="card-errors" class="card-errors"></div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          <span class="loading" id="loading"></span>
+          <span id="submit-text">Start Free Trial</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Stripe
+  const stripe = Stripe('pk_test_51RZBST2LmQdRkcGxw57tlyjJbIfv7aHDgKS2DOr1aeBlQiSRmtBXclPx3eEtuhIW5tZJloePazjGFbBKhse3JCs00011PzghzP'); // Your actual Stripe publishable key
+  const elements = stripe.elements();
+
+  // Plan configurations
+  const planConfigs = {
+      starter: {
+          name: 'Solo Stylist',
+          price: '$29',
+          priceId: 'price_starter_monthly',
+          features: [
+              '✓ 100 AI-generated posts/month',
+              '✓ Basic SMS templates',
+              '✓ Email support',
+              '✓ 5 brand presets',
+              '✓ Client media capture'
+          ]
+      },
+      professional: {
+          name: 'Salon Pro',
+          price: '$129',
+          priceId: 'price_professional_monthly',
+          features: [
+              '✓ 500 AI-generated posts/month',
+              '✓ Premium SMS flows',
+              '✓ Priority support',
+              '✓ Unlimited brand presets',
+              '✓ Analytics dashboard',
+              '✓ Affiliate link integration',
+              '✓ Multi-stylist management'
+          ]
+      },
+      beta: {
+          name: 'Beta Tester',
+          price: 'FREE',
+          priceId: null,
+          features: [
+              '✓ 500 AI-generated posts/month',
+              '✓ Premium SMS flows',
+              '✓ Priority support',
+              '✓ Unlimited brand presets',
+              '✓ Analytics dashboard',
+              '✓ Affiliate link integration',
+              '✓ Multi-stylist management',
+              '🎯 Influence the final product'
+          ]
+      }
+  };
+
+  // Get URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const selectedPlan = urlParams.get('plan') || 'professional';
+  const userId = urlParams.get('userId');
+
+  // Load user data from session storage
+  const pendingUser = JSON.parse(sessionStorage.getItem('pendingUser') || '{}');
+
+  // Update plan display
+  function updatePlanDisplay() {
+      const config = planConfigs[selectedPlan];
+      document.getElementById('planName').textContent = config.name;
+      document.getElementById('planPrice').innerHTML = `${config.price}<span style="font-size: 1rem;">/month</span>`;
+
+      const featuresList = document.getElementById('planFeatures');
+      featuresList.innerHTML = config.features.map(feature => `<li>${feature}</li>`).join('');
+  }
+
+  // Pre-fill email
+  document.getElementById('email').value = pendingUser.email || '';
+  document.getElementById('cardholder-name').value = `${pendingUser.firstName || ''} `.trim();
+
+  // Update plan display
+  updatePlanDisplay();
+
+  // Create Stripe card element
+  const cardElement = elements.create('card', {
+      style: {
+          base: {
+              fontSize: '16px',
+              color: '#424770',
+              '::placeholder': {
+                  color: '#aab7c4',
+              },
+          },
+          invalid: {
+              color: '#9e2146',
+          },
+      },
+  });
+
+  cardElement.mount('#card-element');
+
+  // Handle card element events
+  cardElement.on('change', ({error}) => {
+      const displayError = document.getElementById('card-errors');
+      if (error) {
+          displayError.textContent = error.message;
+          displayError.style.display = 'block';
+          document.getElementById('card-element').classList.add('invalid');
+      } else {
+          displayError.style.display = 'none';
+          document.getElementById('card-element').classList.remove('invalid');
+      }
+  });
+
+  cardElement.on('focus', () => {
+      document.getElementById('card-element').classList.add('focused');
+  });
+
+  cardElement.on('blur', () => {
+      document.getElementById('card-element').classList.remove('focused');
+  });
+
+  // Handle form submission
+  const form = document.getElementById('payment-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const loading = document.getElementById('loading');
+  const submitText = document.getElementById('submit-text');
+
+  form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      // Show loading state
+      submitBtn.disabled = true;
+      loading.style.display = 'inline-block';
+      submitText.textContent = 'Processing...';
+
+      try {
+          // Step 1: Create payment intent
+          const response = await fetch('/api/create-payment-intent', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                  userId: userId,
+                  planId: selectedPlan,
+                  priceId: planConfigs[selectedPlan].priceId
+              }),
+          });
+
+          const {clientSecret, customerId} = await response.json();
+
+          // Step 2: Confirm payment with Stripe
+          const {error, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {
+              payment_method: {
+                  card: cardElement,
+                  billing_details: {
+                      name: document.getElementById('cardholder-name').value,
+                      email: document.getElementById('email').value,
+                  },
+              }
+          });
+
+          if (error) {
+              console.error('Payment failed:', error);
+              alert('Payment failed: ' + error.message);
+          } else {
+              console.log('Payment succeeded:', paymentIntent);
+
+              // Store payment info
+              sessionStorage.setItem('paymentComplete', JSON.stringify({
+                  userId: userId,
+                  customerId: customerId,
+                  plan: selectedPlan,
+                  paymentIntentId: paymentIntent.id
+              }));
+
+              // Redirect to salon onboarding
+              window.location.href = 'salon-onboarding.html';
+          }
+      } catch (err) {
+          console.error('Error:', err);
+          alert('An error occurred. Please try again.');
+      } finally {
+          // Reset loading state
+          submitBtn.disabled = false;
+          loading.style.display = 'none';
+          submitText.textContent = 'Start Free Trial';
+      }
+  });
+
+  // Redirect if no user data
+  if (!userId || !pendingUser.email) {
+      alert('Session expired. Please sign up again.');
+      window.location.href = 'signup.html';
+  }
+</script>
+</body>
+</html>

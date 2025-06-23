@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <title>Sign Up - PostMyStyle.ai</title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .signup-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        padding: 3rem;
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .logo {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .logo a {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-decoration: none;
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .signup-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+    .signup-header p {
+        color: #666;
+        font-size: 1rem;
+    }
+
+    .plan-selection {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .selected-plan {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 1.1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background: white;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .input-error {
+        border-color: #e74c3c !important;
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        margin-top: 0.25rem;
+    }
+
+    .checkbox-group label {
+        margin-bottom: 0;
+        font-weight: normal;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 2rem;
+        color: #666;
+    }
+
+    .login-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .loading {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .signup-container {
+            padding: 2rem;
+            margin: 1rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+  </style>
+</head>
+<body>
+<div class="signup-container">
+  <div class="logo">
+    <a href="index.html">
+      <img src="assets/images/postmystyletitle.png" alt="PostMyStyle.ai" style="height: 50px; width: auto;">
+    </a>
+  </div>
+
+  <div class="signup-header">
+    <h1>Start Your Marketing Revolution</h1>
+    <p>Join salons and stylists building stronger brands and generating more revenue</p>
+  </div>
+
+  <div class="plan-selection" id="planDisplay">
+    <div class="selected-plan">Beta Tester Plan - Free for 14 Days</div>
+    <small>You can change your plan anytime after trial</small>
+  </div>
+
+  <div class="success-message" id="successMessage">
+    Account created successfully! Redirecting to salon setup...
+  </div>
+
+  <form id="signupForm">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input type="text" id="firstName" name="firstName" required>
+        <div class="error-message" id="firstNameError">First name is required</div>
+      </div>
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" id="lastName" name="lastName" required>
+        <div class="error-message" id="lastNameError">Last name is required</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" required>
+      <div class="error-message" id="emailError">Please enter a valid email address</div>
+    </div>
+
+    <div class="form-group">
+      <label for="company">Company Name</label>
+      <input type="text" id="company" name="company">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="8">
+        <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required>
+        <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="planSelect">Select Plan</label>
+      <select id="planSelect" name="plan">
+        <option value="starter">Solo Stylist - $29/month</option>
+        <option value="professional">Salon Pro - $129/month</option>
+        <option value="beta" selected>Beta Tester - Free for 14 Days</option>
+      </select>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="terms" name="terms" required>
+      <label for="terms">
+        I agree to the <a href="/terms" target="_blank">Terms of Service</a> and
+        <a href="/privacy" target="_blank">Privacy Policy</a>
+      </label>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="marketing" name="marketing">
+      <label for="marketing">
+        I would like to receive marketing emails about new features and updates
+      </label>
+    </div>
+
+    <button type="submit" class="submit-btn" id="submitBtn">
+      <span class="loading" id="loading"></span>
+      <span id="submitText">Create Account & Start Trial</span>
+    </button>
+  </form>
+
+  <div class="login-link">
+    Already have an account? <a href="login.html">Sign in here</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Supabase Configuration
+  const supabaseUrl = 'https://mffqaqvjylkotkgvytro.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZnFhcXZqeWxrb3RrZ3Z5dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTI5MzYsImV4cCI6MjA2MTY4ODkzNn0.oUlS-JS1G9OHjwv89xZY_QRqwsoI-GE8c-ZE_U2TjDc';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  // Get plan from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const planParam = urlParams.get('plan');
+
+  if (planParam) {
+      document.getElementById('planSelect').value = planParam;
+      updatePlanDisplay();
+  }
+
+  // Plan display update
+  function updatePlanDisplay() {
+      const select = document.getElementById('planSelect');
+      const display = document.getElementById('planDisplay');
+      const option = select.options[select.selectedIndex];
+      display.innerHTML = `
+          <div class="selected-plan">${option.text}</div>
+          <small>You can change your plan anytime after signup</small>
+      `;
+  }
+
+  document.getElementById('planSelect').addEventListener('change', updatePlanDisplay);
+
+  // Form validation
+  const form = document.getElementById('signupForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const loading = document.getElementById('loading');
+  const submitText = document.getElementById('submitText');
+
+  // Real-time validation
+  function validateField(field, errorElement, validationFn) {
+      field.addEventListener('blur', () => {
+          if (!validationFn()) {
+              field.classList.add('input-error');
+              errorElement.style.display = 'block';
+          } else {
+              field.classList.remove('input-error');
+              errorElement.style.display = 'none';
+          }
+      });
+
+      field.addEventListener('input', () => {
+          if (field.classList.contains('input-error') && validationFn()) {
+              field.classList.remove('input-error');
+              errorElement.style.display = 'none';
+          }
+      });
+  }
+
+  // Validation functions
+  validateField(
+      document.getElementById('firstName'),
+      document.getElementById('firstNameError'),
+      () => document.getElementById('firstName').value.trim().length > 0
+  );
+
+  validateField(
+      document.getElementById('lastName'),
+      document.getElementById('lastNameError'),
+      () => document.getElementById('lastName').value.trim().length > 0
+  );
+
+  validateField(
+      document.getElementById('email'),
+      document.getElementById('emailError'),
+      () => {
+          const email = document.getElementById('email').value;
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+  );
+
+  validateField(
+      document.getElementById('password'),
+      document.getElementById('passwordError'),
+      () => document.getElementById('password').value.length >= 8
+  );
+
+  validateField(
+      document.getElementById('confirmPassword'),
+      document.getElementById('confirmPasswordError'),
+      () => {
+          const password = document.getElementById('password').value;
+          const confirmPassword = document.getElementById('confirmPassword').value;
+          return password === confirmPassword && password.length > 0;
+      }
+  );
+
+  // Form submission with Supabase
+  form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      console.log('Form submitted!'); // Debug log
+
+      // Show loading state
+      submitBtn.disabled = true;
+      loading.style.display = 'inline-block';
+      submitText.textContent = 'Creating Account...';
+
+      // Collect form data
+      const formData = new FormData(form);
+      const userData = {
+          firstName: formData.get('firstName'),
+          lastName: formData.get('lastName'),
+          email: formData.get('email'),
+          company: formData.get('company'),
+          password: formData.get('password'),
+          plan: formData.get('plan'),
+          terms: formData.get('terms') === 'on',
+          marketing: formData.get('marketing') === 'on'
+      };
+
+      console.log('User data:', userData); // Debug log
+
+      try {
+          // Create user with Supabase Auth
+          console.log('Calling Supabase signUp...'); // Debug log
+
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+              email: userData.email,
+              password: userData.password,
+              options: {
+                  data: {
+                      first_name: userData.firstName,
+                      last_name: userData.lastName,
+                      company: userData.company,
+                      plan: userData.plan,
+                      marketing_consent: userData.marketing
+                  }
+              }
+          });
+
+          console.log('Supabase response:', authData, authError); // Debug log
+
+          if (authError) {
+              throw new Error(authError.message);
+          }
+
+          // Check if user was created (not just logged in)
+          if (authData.user) {
+              console.log('User created successfully:', authData.user.id); // Debug log
+
+              // Store user info for salon onboarding
+              sessionStorage.setItem('pendingUser', JSON.stringify({
+                  userId: authData.user.id,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  lastName: userData.lastName,
+                  plan: userData.plan
+              }));
+
+              // Show success message
+              document.getElementById('successMessage').style.display = 'block';
+              form.style.display = 'none';
+
+              // Beta users go directly to onboarding, paid users need payment first
+              if (userData.plan === 'beta') {
+                  console.log('Beta user - going to onboarding'); // Debug log
+
+                  // Set session data for beta user
+                  sessionStorage.setItem('paymentComplete', JSON.stringify({
+                      userId: authData.user.id,
+                      plan: 'beta',
+                      betaTester: true
+                  }));
+
+                  setTimeout(() => {
+                      window.location.href = 'salon-onboarding.html';
+                  }, 2000);
+              } else {
+                  console.log('Paid user - going to payment'); // Debug log
+
+                  // Redirect to payment page for paid plans
+                  setTimeout(() => {
+                      window.location.href = `payment.html?plan=${userData.plan}&userId=${authData.user.id}`;
+                  }, 2000);
+              }
+          } else {
+              throw new Error('Account creation failed');
+          }
+
+      } catch (error) {
+          console.error('Signup error:', error);
+
+          // Show user-friendly error message
+          let errorMsg = 'There was an error creating your account. Please try again.';
+
+          if (error.message.includes('already registered')) {
+              errorMsg = 'An account with this email already exists. Please try logging in instead.';
+          } else if (error.message.includes('Invalid email')) {
+              errorMsg = 'Please enter a valid email address.';
+          } else if (error.message.includes('Password')) {
+              errorMsg = 'Password must be at least 8 characters long.';
+          }
+
+          alert(errorMsg);
+
+      } finally {
+          // Reset loading state
+          submitBtn.disabled = false;
+          loading.style.display = 'none';
+          submitText.textContent = 'Create Account & Start Trial';
+      }
+  });
+
+  // Initialize plan display
+  updatePlanDisplay();
+</script>
+</body>
+</html>

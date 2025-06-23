@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <title>Log In - PostMyStyle.ai</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: white;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-error {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        /* Password visibility toggle */
+        .password-input-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 1.2rem;
+            z-index: 10;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #333;
+        }
+
+        .password-toggle:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .password-input {
+            padding-right: 3rem;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 2rem;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 2rem;
+            color: #666;
+        }
+
+        .signup-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message-global {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .demo-credentials {
+            background: #e8f4fd;
+            border: 1px solid #667eea;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .demo-credentials strong {
+            color: #667eea;
+        }
+
+        .demo-credentials button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .demo-credentials button:hover {
+            background: #5a6fd8;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="logo">
+        <a href="index.html">
+            <img src="assets/images/postmystyletitle.png" alt="PostMyStyle.ai">
+        </a>
+    </div>
+
+    <div class="login-header">
+        <h1>Welcome Back</h1>
+        <p>Sign in to your salon dashboard</p>
+    </div>
+
+    <div class="demo-credentials">
+        <strong>Test with your Beta account:</strong><br>
+        Email: testuser@example.com<br>
+        Password: test1234
+        <br><br>
+        <button type="button" onclick="fillDemoCredentials()">Auto-fill these credentials</button>
+    </div>
+
+    <div class="success-message" id="successMessage">
+        Login successful! Redirecting to dashboard...
+    </div>
+
+    <div class="error-message-global" id="errorMessage">
+        Invalid email or password. Please try again.
+    </div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required>
+            <div class="error-message" id="emailError">Please enter a valid email address</div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <div class="password-input-container">
+                <input type="password" id="password" name="password" class="password-input" required>
+                <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Toggle password visibility">
+                    👁️
+                </button>
+            </div>
+            <div class="error-message" id="passwordError">Password is required</div>
+        </div>
+
+        <div class="forgot-password">
+            <a href="reset-password.html">Forgot your password?</a>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+            <span class="loading" id="loading"></span>
+            <span id="submitText">Sign In</span>
+        </button>
+    </form>
+
+    <div class="signup-link">
+        Don't have an account? <a href="signup.html">Sign up here</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // Supabase Configuration
+    const supabaseUrl = 'https://mffqaqvjylkotkgvytro.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZnFhcXZqeWxrb3RrZ3Z5dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTI5MzYsImV4cCI6MjA2MTY4ODkzNn0.oUlS-JS1G9OHjwv89xZY_QRqwsoI-GE8c-ZE_U2TjDc';
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const form = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const submitText = document.getElementById('submitText');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Password visibility toggle
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.querySelector('.password-toggle');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleBtn.innerHTML = '🙈';
+            toggleBtn.setAttribute('aria-label', 'Hide password');
+        } else {
+            passwordInput.type = 'password';
+            toggleBtn.innerHTML = '👁️';
+            toggleBtn.setAttribute('aria-label', 'Show password');
+        }
+    }
+
+    // Auto-fill demo credentials
+    function fillDemoCredentials() {
+        document.getElementById('email').value = 'testuser@example.com';
+        document.getElementById('password').value = 'test1234';
+    }
+
+    // Real-time validation
+    function validateField(field, errorElement, validationFn) {
+        field.addEventListener('blur', () => {
+            if (!validationFn()) {
+                field.classList.add('input-error');
+                errorElement.style.display = 'block';
+            } else {
+                field.classList.remove('input-error');
+                errorElement.style.display = 'none';
+            }
+        });
+
+        field.addEventListener('input', () => {
+            if (field.classList.contains('input-error') && validationFn()) {
+                field.classList.remove('input-error');
+                errorElement.style.display = 'none';
+            }
+        });
+    }
+
+    // Email validation
+    validateField(
+        document.getElementById('email'),
+        document.getElementById('emailError'),
+        () => {
+            const email = document.getElementById('email').value;
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+    );
+
+    // Password validation
+    validateField(
+        document.getElementById('password'),
+        document.getElementById('passwordError'),
+        () => document.getElementById('password').value.length > 0
+    );
+
+    // Form submission with Supabase
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        console.log('Login form submitted!'); // Debug log
+
+        // Hide previous messages
+        successMessage.style.display = 'none';
+        errorMessage.style.display = 'none';
+
+        // Show loading state
+        submitBtn.disabled = true;
+        loading.style.display = 'inline-block';
+        submitText.textContent = 'Signing In...';
+
+        // Collect form data
+        const formData = new FormData(form);
+        const loginData = {
+            email: formData.get('email'),
+            password: formData.get('password')
+        };
+
+        console.log('Login attempt for:', loginData.email); // Debug log
+
+        try {
+            // Sign in with Supabase
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: loginData.email,
+                password: loginData.password
+            });
+
+            console.log('Supabase login response:', authData, authError); // Debug log
+
+            if (authError) {
+                throw new Error(authError.message);
+            }
+
+            if (authData.user && authData.session) {
+                console.log('Login successful for user:', authData.user.id); // Debug log
+
+                // Store user info in localStorage for compatibility with dashboard
+                localStorage.setItem('authToken', authData.session.access_token);
+                localStorage.setItem('userInfo', JSON.stringify({
+                    firstName: authData.user.user_metadata?.first_name || 'User',
+                    lastName: authData.user.user_metadata?.last_name || '',
+                    email: authData.user.email
+                }));
+
+                // Get salon info for this user
+                try {
+                    const { data: salonData } = await supabaseClient
+                        .from('user_salon_view')
+                        .select('*')
+                        .eq('user_id', authData.user.id)
+                        .single();
+
+                    if (salonData) {
+                        localStorage.setItem('salonInfo', JSON.stringify({
+                            salonId: salonData.salon_id,
+                            salonName: salonData.salon_name,
+                            plan: salonData.plan_type || 'beta'
+                        }));
+                    }
+                } catch (salonError) {
+                    console.log('No salon data found for user, that\'s ok');
+                }
+
+                // Show success message
+                successMessage.style.display = 'block';
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+
+            } else {
+                throw new Error('Login failed - no session created');
+            }
+
+        } catch (error) {
+            console.error('Login error:', error);
+
+            // Show user-friendly error message
+            let errorMsg = 'Invalid email or password. Please try again.';
+
+            if (error.message.includes('Invalid login credentials')) {
+                errorMsg = 'Invalid email or password. Please check your credentials.';
+            } else if (error.message.includes('Email not confirmed')) {
+                errorMsg = 'Please check your email and confirm your account before signing in.';
+            } else if (error.message.includes('Too many requests')) {
+                errorMsg = 'Too many login attempts. Please wait a moment and try again.';
+            }
+
+            errorMessage.textContent = errorMsg;
+            errorMessage.style.display = 'block';
+        } finally {
+            // Reset loading state
+            submitBtn.disabled = false;
+            loading.style.display = 'none';
+            submitText.textContent = 'Sign In';
+        }
+    });
+
+    // Check if user is already logged in
+    document.addEventListener('DOMContentLoaded', async () => {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        if (session) {
+            console.log('User already logged in, redirecting...');
+            window.location.href = 'dashboard.html';
+        }
+    });
+</script>
+</body>
+</html>
