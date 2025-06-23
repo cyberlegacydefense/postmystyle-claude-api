@@ -29,9 +29,10 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { message, apiKey } = JSON.parse(event.body);
+    const { message } = JSON.parse(event.body);
+    const apiKey = process.env.CLAUDE_API_KEY;
     
-    if (!message || !apiKey) {
+    if (!message) {
       return {
         statusCode: 400,
         headers,
