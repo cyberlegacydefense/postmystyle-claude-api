@@ -1260,7 +1260,49 @@
           console.log('Calling AI with salon business insights...');
 
           // Call AI service with overview action type
-          const response = await callAIService('', 'overview');
+          async function callAIService(prompt, actionType = 'overview') {
+    try {
+        // Get current analytics data
+        const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
+        const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
+        const totalShares = parseInt(document.getElementById('totalShares').textContent) || 0;
+        const totalViews = parseInt(document.getElementById('totalViews').textContent) || 0;
+        const engagementRate = parseInt(document.getElementById('engagementRate').textContent) || 0;
+
+        const ownerName = `${currentUser?.user_metadata?.first_name || 'Owner'} ${currentUser?.user_metadata?.last_name || ''}`.trim();
+        const salonName = salonData?.salon_name || 'Your Salon';
+
+        // Create a business-focused message for Claude
+        let message;
+        if (actionType === 'overview') {
+            message = `You are a business advisor for ${salonName}. Current metrics: ${totalStylists} stylists, ${totalClients} clients, ${totalShares} posts, ${totalViews} views, ${engagementRate}% engagement. Give 2-3 actionable business insights in under 150 words.`;
+        } else {
+            message = `Business question for ${salonName} (${totalStylists} stylists, ${totalClients} clients): ${actionType}. Give specific advice in under 150 words.`;
+        }
+
+        const response = await fetch('https://postmystyle.ai/.netlify/functions/salon-ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                apiKey: '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'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`AI service error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.content[0].text || 'AI advice generated successfully.';
+
+    } catch (error) {
+        console.error('AI service call failed:', error);
+        throw error;
+    }
+};
 
           displayAIMessage(response);
           updateAIStage(stage);
