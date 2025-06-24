@@ -1791,6 +1791,11 @@
           // Update team performance table
           updateTeamPerformanceTable();
 
+          // FIXED: Update main dashboard totals after we have individual stylist data
+          if (currentAnalyticsData) {
+              displayAnalytics(currentAnalyticsData);
+          }
+
           // FIXED: Simplified chart update - no more async issues
           // Wait a bit for DOM to be ready, then update chart
           setTimeout(() => {
