@@ -1422,6 +1422,7 @@
   // Auto-refresh variables
   let autoRefreshInterval = null;
   const AUTO_REFRESH_MINUTES = 5;
+  let isDashboardLoaded = false;
 
   // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE
   async function callAIService(prompt, actionType = 'overview', analyticsData = null) {
@@ -1490,6 +1491,12 @@
 
   // Load user info and salon analytics
   async function loadDashboard() {
+      // Prevent multiple initializations
+      if (isDashboardLoaded) {
+          console.log('Dashboard already loaded, skipping...');
+          return;
+      }
+
       try {
           // Get current user
           const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -1533,11 +1540,17 @@
           // Load stylists data for drill-down
           await loadStylistsData(salonData.salon_id);
 
-          // Initialize charts
-          initializeCharts();
+          // Initialize charts only if not already initialized
+          if (!activityChart) {
+              initializeCharts();
+          }
 
           // Start auto-refresh
           startAutoRefresh();
+
+          // Mark dashboard as loaded
+          isDashboardLoaded = true;
+          console.log('Dashboard initialization complete');
 
       } catch (error) {
           console.error('Error loading dashboard:', error);
@@ -1560,6 +1573,7 @@
           showRefreshIndicator();
 
           if (salonData) {
+              // Only refresh data, don't reinitialize charts
               await loadSalonAnalytics(salonData.salon_id);
               await loadStylistsData(salonData.salon_id);
               updateLastRefreshedTime();
@@ -1775,6 +1789,12 @@
 
   // Initialize Chart.js charts
   function initializeCharts() {
+      // Destroy existing chart if it exists
+      if (activityChart) {
+          activityChart.destroy();
+          activityChart = null;
+      }
+
       // Activity Trends Chart
       const activityCtx = document.getElementById('activityChart').getContext('2d');
 
@@ -2352,6 +2372,7 @@
       showRefreshIndicator();
 
       if (salonData) {
+          // Only refresh data, don't reinitialize charts
           loadSalonAnalytics(salonData.salon_id);
           loadStylistsData(salonData.salon_id);
           updateLastRefreshedTime();
@@ -2525,7 +2546,7 @@
               console.log('Auto-refresh paused - page hidden');
           }
       } else {
-          // Page is visible, resume auto-refresh
+          // Page is visible, resume auto-refresh (but don't reinitialize charts)
           startAutoRefresh();
           console.log('Auto-refresh resumed - page visible');
       }
@@ -2634,16 +2655,15 @@
       }
   });
 
-  // Initialize dashboard when page loads
-  document.addEventListener('DOMContentLoaded', function() {
-      console.log('PostMyStyle.ai Dashboard initializing...');
-      loadDashboard();
-  });
-
-  // Fallback initialization if DOMContentLoaded already fired
+  // Initialize dashboard when page loads - single initialization
   if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadDashboard);
+      document.addEventListener('DOMContentLoaded', function() {
+          console.log('PostMyStyle.ai Dashboard initializing...');
+          loadDashboard();
+      });
   } else {
+      // DOM already loaded
+      console.log('PostMyStyle.ai Dashboard initializing (DOM ready)...');
       loadDashboard();
   }
 
