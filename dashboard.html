@@ -1424,19 +1424,41 @@
   const AUTO_REFRESH_MINUTES = 5;
 
   // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE
-  async function callAIService(prompt, actionType = 'overview') {
+  async function callAIService(prompt, actionType = 'overview', analyticsData = null) {
       try {
-          const totalStylistsEl = document.getElementById('totalStylists');
-          const totalClientsEl = document.getElementById('totalClients');
-          const totalSharesEl = document.getElementById('totalShares');
-          const totalViewsEl = document.getElementById('totalViews');
-          const engagementRateEl = document.getElementById('engagementRate');
+          let totalStylists, totalClients, totalShares, totalViews, engagementRate;
 
-          const totalStylists = totalStylistsEl ? parseInt(totalStylistsEl.textContent) || 0 : 0;
-          const totalClients = totalClientsEl ? parseInt(totalClientsEl.textContent) || 0 : 0;
-          const totalShares = totalSharesEl ? parseInt(totalSharesEl.textContent) || 0 : 0;
-          const totalViews = totalViewsEl ? parseInt(totalViewsEl.textContent) || 0 : 0;
-          const engagementRate = engagementRateEl ? parseInt(engagementRateEl.textContent) || 0 : 0;
+          if (analyticsData) {
+              // Use provided analytics data (preferred)
+              totalStylists = analyticsData.total_stylists || 0;
+              totalClients = analyticsData.total_clients || 0;
+              totalShares = analyticsData.total_media_sends || 0;
+              totalViews = analyticsData.total_clicks || 0;
+              const totalSocial = (analyticsData.total_instagram_shares || 0) +
+                                (analyticsData.total_facebook_shares || 0) +
+                                (analyticsData.total_tiktok_shares || 0);
+              engagementRate = totalShares > 0 ? Math.round((totalSocial / totalShares) * 100) : 0;
+          } else {
+              // Fallback to DOM elements, but only if they contain actual numbers
+              const totalStylistsEl = document.getElementById('totalStylists');
+              const totalClientsEl = document.getElementById('totalClients');
+              const totalSharesEl = document.getElementById('totalShares');
+              const totalViewsEl = document.getElementById('totalViews');
+              const engagementRateEl = document.getElementById('engagementRate');
+
+              const stylistText = totalStylistsEl ? totalStylistsEl.textContent.trim() : '0';
+              const clientText = totalClientsEl ? totalClientsEl.textContent.trim() : '0';
+              const shareText = totalSharesEl ? totalSharesEl.textContent.trim() : '0';
+              const viewText = totalViewsEl ? totalViewsEl.textContent.trim() : '0';
+              const engagementText = engagementRateEl ? engagementRateEl.textContent.trim() : '0%';
+
+              // Only parse if not loading states
+              totalStylists = (stylistText !== '-' && stylistText !== 'Loading...') ? parseInt(stylistText) || 0 : 0;
+              totalClients = (clientText !== '-' && clientText !== 'Loading...') ? parseInt(clientText) || 0 : 0;
+              totalShares = (shareText !== '-' && shareText !== 'Loading...') ? parseInt(shareText) || 0 : 0;
+              totalViews = (viewText !== '-' && viewText !== 'Loading...') ? parseInt(viewText) || 0 : 0;
+              engagementRate = (engagementText !== '-' && engagementText !== 'Loading...') ? parseInt(engagementText) || 0 : 0;
+          }
 
           const salonName = salonData?.salon_name || 'Your Salon';
 
@@ -1698,8 +1720,13 @@
       }
   }
 
+  // Store analytics data globally for AI context
+  let currentAnalyticsData = null;
+
   // Display analytics data in the UI
   function displayAnalytics(data) {
+      // Store for AI context
+      currentAnalyticsData = data;
       // Remove loading states
       document.querySelectorAll('.metric-card').forEach(card => {
           card.classList.remove('loading-stats');
@@ -1904,9 +1931,9 @@
   function getSalonBusinessStage(analytics) {
       if (!analytics) return 'startup';
 
-      const totalStylists = analytics.totalStylists || 0;
-      const totalClients = analytics.totalClients || 0;
-      const totalPosts = analytics.totalShares || 0;
+      const totalStylists = analytics.totalStylists || analytics.total_stylists || 0;
+      const totalClients = analytics.totalClients || analytics.total_clients || 0;
+      const totalPosts = analytics.totalShares || analytics.total_media_sends || 0;
 
       if (totalStylists <= 2 && totalClients < 50 && totalPosts < 100) return 'startup';
       if (totalStylists <= 5 && totalClients < 200 && totalPosts < 500) return 'growing';
@@ -1938,13 +1965,13 @@
       try {
           console.log('Calling AI with salon business insights...');
 
-          // Call AI service with overview action type
-          const response = await callAIService('', 'overview');
+          // Call AI service with overview action type and analytics data
+          const response = await callAIService('', 'overview', currentAnalyticsData);
           displayAIMessage(response);
 
-          const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
-          const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
-          const totalPosts = parseInt(document.getElementById('totalShares').textContent) || 0;
+          const totalStylists = currentAnalyticsData?.total_stylists || 0;
+          const totalClients = currentAnalyticsData?.total_clients || 0;
+          const totalPosts = currentAnalyticsData?.total_media_sends || 0;
           const stage = getSalonBusinessStage({ totalStylists, totalClients, totalShares: totalPosts });
           updateAIStage(stage);
 
@@ -1962,9 +1989,9 @@
   }
 
   function generateFallbackMessage() {
-      const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
-      const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
-      const totalPosts = parseInt(document.getElementById('totalShares').textContent) || 0;
+      const totalStylists = currentAnalyticsData?.total_stylists || 0;
+      const totalClients = currentAnalyticsData?.total_clients || 0;
+      const totalPosts = currentAnalyticsData?.total_media_sends || 0;
       const salonName = salonData?.salon_name || 'Your salon';
 
       if (totalStylists === 0) {
@@ -2071,7 +2098,7 @@
 
       try {
           const questionText = quickActionTypes[topic] || topic;
-          const response = await callAIService('', questionText);
+          const response = await callAIService('', questionText, currentAnalyticsData);
           displayAIMessage(response);
       } catch (error) {
           console.error('Quick question failed:', error);
@@ -2101,8 +2128,8 @@
       document.getElementById('aiMessage').style.display = 'none';
 
       try {
-          // Pass the question directly
-          const response = await callAIService('', question);
+          // Pass the question directly with analytics context
+          const response = await callAIService('', question, currentAnalyticsData);
           displayAIMessage(response);
       } catch (error) {
           console.error('Custom question failed:', error);
