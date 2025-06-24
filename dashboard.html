@@ -51,22 +51,23 @@
 
     .logo {
         text-align: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         position: relative;
         z-index: 1;
     }
 
-    .logo h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
+    .logo img {
+        max-width: 180px;
+        height: auto;
         margin-bottom: 0.5rem;
     }
 
     .logo p {
         font-size: 0.9rem;
         opacity: 0.8;
+        margin-bottom: 1rem;
     }
 
     .nav-menu {
@@ -101,46 +102,16 @@
         font-size: 1.1rem;
     }
 
-    .user-info-sidebar {
-        position: absolute;
-        bottom: 2rem;
-        left: 1.5rem;
-        right: 1.5rem;
-        background: rgba(255, 255, 255, 0.15);
-        padding: 1rem;
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-        z-index: 1;
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .user-name {
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
     .logout-btn-sidebar {
         background: rgba(255, 255, 255, 0.2);
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 0.25rem 0.75rem;
+        padding: 0.4rem 0.75rem;
         border-radius: 15px;
         cursor: pointer;
         transition: all 0.3s ease;
         font-size: 0.8rem;
         margin-top: 0.5rem;
-        width: 100%;
     }
 
     .logout-btn-sidebar:hover {
@@ -1108,54 +1079,57 @@
   <!-- Sidebar Navigation -->
   <div class="sidebar">
     <div class="logo">
-      <h1>PostMyStyle.ai</h1>
-      <p>Salon Analytics</p>
+      <img src="https://res.cloudinary.com/dkstyvfzo/image/upload/v1750698482/postmystyletitle_tuls98.png" alt="PostMyStyle.ai">
+      <p>PostMyStyle AI Analytics</p>
+
+      <!-- User info moved here -->
+      <div style="background: rgba(255, 255, 255, 0.15); padding: 0.75rem; border-radius: 8px; backdrop-filter: blur(10px); margin-top: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <div style="width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">👤</div>
+          <div style="font-weight: 600; font-size: 0.85rem;" id="userNameSidebar">Loading...</div>
+        </div>
+        <button class="logout-btn-sidebar" onclick="logout()" style="width: 100%; margin-top: 0;">Log Out</button>
+      </div>
     </div>
 
     <ul class="nav-menu">
       <li class="nav-item">
-        <a href="#" class="nav-link active">
+        <a href="#" class="nav-link active" onclick="showDashboard()">
           <span class="nav-icon">📊</span>
           <span>Dashboard</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="#" class="nav-link" onclick="showTeamPerformance()">
           <span class="nav-icon">👥</span>
           <span>Team Performance</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="#" class="nav-link" onclick="showSocialAnalytics()">
           <span class="nav-icon">📱</span>
           <span>Social Analytics</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="#" class="nav-link" onclick="showRevenueTracking()">
           <span class="nav-icon">💰</span>
           <span>Revenue Tracking</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="#" class="nav-link" onclick="showGoalsTargets()">
           <span class="nav-icon">🎯</span>
           <span>Goals & Targets</span>
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="#" class="nav-link" onclick="showSettings()">
           <span class="nav-icon">⚙️</span>
           <span>Settings</span>
         </a>
       </li>
     </ul>
-
-    <div class="user-info-sidebar">
-      <div class="user-avatar">👤</div>
-      <div class="user-name" id="userNameSidebar">Loading...</div>
-      <button class="logout-btn-sidebar" onclick="logout()">Log Out</button>
-    </div>
   </div>
 
   <!-- Auto-refresh indicator -->
@@ -1333,26 +1307,16 @@
       </div>
 
       <div class="insights-panel">
-        <h3 class="chart-title">Key Insights</h3>
-
-        <div class="insight-item insight-positive">
-          <div class="insight-title">🎯 Peak Performance Day</div>
-          <div class="insight-desc">Tuesday posts get 23% more engagement than average. Schedule important content on Tuesdays.</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 class="chart-title">AI Performance Insights</h3>
+          <button onclick="generatePerformanceInsights()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">🔄 Refresh</button>
         </div>
 
-        <div class="insight-item insight-positive">
-          <div class="insight-title">⭐ Top Performer</div>
-          <div class="insight-desc">Sarah M. leads with 156 posts and 89% engagement rate. Consider having her mentor other team members.</div>
-        </div>
-
-        <div class="insight-item insight-warning">
-          <div class="insight-title">📈 Growth Opportunity</div>
-          <div class="insight-desc">Instagram stories are underutilized. Only 12% of posts include stories - increase to 40% for better reach.</div>
-        </div>
-
-        <div class="insight-item">
-          <div class="insight-title">🕐 Optimal Posting Time</div>
-          <div class="insight-desc">Best engagement between 2-4 PM and 7-9 PM. Schedule posts during these windows.</div>
+        <div id="performanceInsightsContent">
+          <div style="text-align: center; padding: 2rem; color: #666;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🧠</div>
+            <p>Click refresh to generate AI-powered insights based on your team's performance data.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1644,6 +1608,9 @@
 
           // Update charts with real stylist data
           updateCharts(currentAnalyticsData);
+
+          // Generate AI performance insights
+          generatePerformanceInsights();
 
       } catch (error) {
           console.error('Error loading stylists data:', error);
@@ -2670,6 +2637,193 @@
       `;
 
       modal.classList.add('active');
+  }
+
+  // Sidebar navigation functions
+  function showDashboard() {
+      setActiveNavItem('Dashboard');
+      // Dashboard is already visible - could scroll to top or refresh
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showTeamPerformance() {
+      setActiveNavItem('Team Performance');
+      // Scroll to team performance table
+      document.querySelector('.performance-table').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function showSocialAnalytics() {
+      setActiveNavItem('Social Analytics');
+      // Scroll to metrics grid (social analytics cards)
+      document.querySelector('.metrics-grid').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function showRevenueTracking() {
+      setActiveNavItem('Revenue Tracking');
+      alert('Revenue Tracking feature coming soon! This will show detailed financial analytics and revenue trends.');
+  }
+
+  function showGoalsTargets() {
+      setActiveNavItem('Goals & Targets');
+      alert('Goals & Targets feature coming soon! This will help you set and track performance goals for your team.');
+  }
+
+  function showSettings() {
+      setActiveNavItem('Settings');
+      alert('Settings feature coming soon! This will allow you to configure salon preferences and user settings.');
+  }
+
+  function setActiveNavItem(itemName) {
+      // Remove active class from all nav links
+      document.querySelectorAll('.nav-link').forEach(link => {
+          link.classList.remove('active');
+      });
+
+      // Add active class to clicked item
+      document.querySelectorAll('.nav-link').forEach(link => {
+          if (link.textContent.trim().includes(itemName)) {
+              link.classList.add('active');
+          }
+      });
+  }
+
+  // AI Performance Insights Generator
+  async function generatePerformanceInsights() {
+      const insightsContent = document.getElementById('performanceInsightsContent');
+
+      // Show loading state
+      insightsContent.innerHTML = `
+          <div style="text-align: center; padding: 2rem;">
+              <div class="ai-spinner" style="margin: 0 auto 1rem;"></div>
+              <p style="color: #666;">Analyzing team performance data...</p>
+          </div>
+      `;
+
+      try {
+          if (!stylistsData || stylistsData.length === 0) {
+              insightsContent.innerHTML = `
+                  <div class="insight-item">
+                      <div class="insight-title">📊 Getting Started</div>
+                      <div class="insight-desc">Add stylists to your team to unlock AI-powered performance insights and recommendations.</div>
+                  </div>
+              `;
+              return;
+          }
+
+          // Analyze real data
+          const insights = analyzeTeamPerformance();
+
+          // Try to get AI insights if available
+          let aiInsight = null;
+          try {
+              const prompt = `Analyze salon team performance: ${insights.summary}. Give 1 key insight in 50 words.`;
+              aiInsight = await callAIService('', prompt, currentAnalyticsData);
+          } catch (error) {
+              console.log('AI insight generation failed, using data analysis');
+          }
+
+          // Display insights
+          let insightsHTML = '';
+
+          if (aiInsight) {
+              insightsHTML += `
+                  <div class="insight-item insight-positive">
+                      <div class="insight-title">🧠 AI Analysis</div>
+                      <div class="insight-desc">${aiInsight}</div>
+                  </div>
+              `;
+          }
+
+          // Add data-driven insights
+          insights.items.forEach(insight => {
+              insightsHTML += `
+                  <div class="insight-item ${insight.type}">
+                      <div class="insight-title">${insight.title}</div>
+                      <div class="insight-desc">${insight.description}</div>
+                  </div>
+              `;
+          });
+
+          insightsContent.innerHTML = insightsHTML;
+
+      } catch (error) {
+          console.error('Error generating performance insights:', error);
+          insightsContent.innerHTML = `
+              <div class="insight-item insight-warning">
+                  <div class="insight-title">⚠️ Analysis Error</div>
+                  <div class="insight-desc">Unable to generate insights at this time. Please try again later.</div>
+              </div>
+          `;
+      }
+  }
+
+  // Analyze team performance based on real data
+  function analyzeTeamPerformance() {
+      if (!stylistsData || stylistsData.length === 0) {
+          return { items: [], summary: 'No team data available' };
+      }
+
+      const insights = [];
+      let summary = '';
+
+      // Analyze top performer
+      const topPerformer = stylistsData.reduce((prev, current) =>
+          (prev.totalPosts > current.totalPosts) ? prev : current
+      );
+
+      if (topPerformer.totalPosts > 0) {
+          insights.push({
+              type: 'insight-positive',
+              title: `⭐ Top Performer: ${topPerformer.stylist_name}`,
+              description: `Leading with ${topPerformer.totalPosts} posts and ${topPerformer.engagementRate}% engagement. Consider having them mentor other team members.`
+          });
+      }
+
+      // Analyze engagement rates
+      const avgEngagement = stylistsData.reduce((sum, s) => sum + s.engagementRate, 0) / stylistsData.length;
+      const lowEngagement = stylistsData.filter(s => s.engagementRate < avgEngagement * 0.7);
+
+      if (lowEngagement.length > 0) {
+          insights.push({
+              type: 'insight-warning',
+              title: '📈 Engagement Opportunity',
+              description: `${lowEngagement.length} team member(s) have below-average engagement. Focus on content quality and posting consistency.`
+          });
+      }
+
+      // Analyze posting consistency
+      const totalPosts = stylistsData.reduce((sum, s) => sum + s.totalPosts, 0);
+      const avgPosts = totalPosts / stylistsData.length;
+
+      if (avgPosts < 10) {
+          insights.push({
+              type: 'insight-warning',
+              title: '📱 Content Creation Goal',
+              description: `Team average is ${Math.round(avgPosts)} posts. Aim for 20+ posts per stylist for better visibility and client engagement.`
+          });
+      } else {
+          insights.push({
+              type: 'insight-positive',
+              title: '🎯 Strong Content Creation',
+              description: `Great job! Team average of ${Math.round(avgPosts)} posts shows consistent content creation.`
+          });
+      }
+
+      // Client to post ratio analysis
+      const totalClients = stylistsData.reduce((sum, s) => sum + s.totalClients, 0);
+      const clientPostRatio = totalClients / Math.max(totalPosts, 1);
+
+      if (clientPostRatio > 1) {
+          insights.push({
+              type: 'insight-positive',
+              title: '💝 Client Engagement Success',
+              description: `Excellent client-to-post ratio of ${clientPostRatio.toFixed(1)}. Your content is effectively reaching and engaging clients.`
+          });
+      }
+
+      summary = `${stylistsData.length} stylists, ${totalPosts} total posts, ${Math.round(avgEngagement)}% avg engagement, ${totalClients} total clients`;
+
+      return { items: insights, summary };
   }
 
   // Enhanced error handling
