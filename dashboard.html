@@ -370,6 +370,10 @@
         margin-bottom: 1rem;
     }
 
+    .ai-message strong {
+        font-weight: 600;
+    }
+
     .ai-expand-btn {
         background: none;
         border: none;
@@ -1429,9 +1433,9 @@
 
           let message;
           if (actionType === 'overview') {
-              message = `You are a business advisor for ${salonName}. Current metrics: ${totalStylists} stylists, ${totalClients} clients, ${totalShares} posts, ${totalViews} views, ${engagementRate}% engagement. Give 2-3 actionable business insights in under 150 words.`;
+              message = `You are a business advisor for ${salonName}. Current metrics: ${totalStylists} stylists, ${totalClients} clients, ${totalShares} posts, ${totalViews} views, ${engagementRate}% engagement. Provide 2-3 actionable business insights. Only respond with the insights, no meta-text about word limits.`;
           } else {
-              message = `Business question for ${salonName} (${totalStylists} stylists, ${totalClients} clients): ${actionType}. Give specific advice in under 150 words.`;
+              message = `Business question for ${salonName} (${totalStylists} stylists, ${totalClients} clients): ${actionType}. Give specific actionable advice. Only respond with the advice, no meta-text about word limits or instructions.`;
           }
 
           const response = await fetch('https://postmystyle.ai/.netlify/functions/salon-ai', {
@@ -2008,18 +2012,22 @@
   }
 
   function displayAIMessage(message) {
-      aiMessageFull = message;
+      // Clean the message first
+      const cleanedMessage = cleanAIResponse(message);
+      aiMessageFull = cleanedMessage;
 
       // Truncate message if too long
-      if (message.length > 200) {
-          aiMessageTruncated = message.substring(0, 200) + '...';
+      if (cleanedMessage.length > 200) {
+          aiMessageTruncated = cleanedMessage.substring(0, 200) + '...';
           document.getElementById('aiExpandBtn').style.display = 'flex';
       } else {
-          aiMessageTruncated = message;
+          aiMessageTruncated = cleanedMessage;
           document.getElementById('aiExpandBtn').style.display = 'none';
       }
 
-      document.getElementById('aiMessageText').textContent = isAIExpanded ? aiMessageFull : aiMessageTruncated;
+      // Format the message for display
+      const formattedMessage = formatAIInsight(isAIExpanded ? aiMessageFull : aiMessageTruncated);
+      document.getElementById('aiMessageText').innerHTML = formattedMessage;
       document.getElementById('aiMessage').style.display = 'block';
       document.getElementById('aiWelcome').style.display = 'none';
 
@@ -2041,7 +2049,8 @@
 
   function toggleAIMessage() {
       isAIExpanded = !isAIExpanded;
-      document.getElementById('aiMessageText').textContent = isAIExpanded ? aiMessageFull : aiMessageTruncated;
+      const formattedMessage = formatAIInsight(isAIExpanded ? aiMessageFull : aiMessageTruncated);
+      document.getElementById('aiMessageText').innerHTML = formattedMessage;
       document.getElementById('expandText').textContent = isAIExpanded ? 'Show Less' : 'Read More';
       document.getElementById('expandIcon').textContent = isAIExpanded ? '▲' : '▼';
   }
@@ -2716,8 +2725,11 @@
           // Try to get AI insights if available
           let aiInsight = null;
           try {
-              const prompt = `Analyze salon team performance: ${insights.summary}. Give 1 key insight in 50 words.`;
-              aiInsight = await callAIService('', prompt, currentAnalyticsData);
+              const prompt = `Analyze salon team performance data and provide one key business insight: ${insights.summary}. Focus on actionable recommendations.`;
+              const rawInsight = await callAIService('', prompt, currentAnalyticsData);
+
+              // Clean up the AI response - remove any meta-text
+              aiInsight = cleanAIResponse(rawInsight);
           } catch (error) {
               console.log('AI insight generation failed, using data analysis');
           }
@@ -2727,9 +2739,9 @@
 
           if (aiInsight) {
               insightsHTML += `
-                  <div class="insight-item insight-positive">
-                      <div class="insight-title">🧠 AI Analysis</div>
-                      <div class="insight-desc">${aiInsight}</div>
+                  <div class="insight-item" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-left-color: #0ea5e9;">
+                      <div class="insight-title">🧠 AI Business Analysis</div>
+                      <div class="insight-desc" style="line-height: 1.6;">${formatAIInsight(aiInsight)}</div>
                   </div>
               `;
           }
@@ -2824,6 +2836,48 @@
       summary = `${stylistsData.length} stylists, ${totalPosts} total posts, ${Math.round(avgEngagement)}% avg engagement, ${totalClients} total clients`;
 
       return { items: insights, summary };
+  }
+
+  // Clean AI response from meta-text and formatting instructions
+  function cleanAIResponse(response) {
+      if (!response) return '';
+
+      // Remove common meta-text patterns
+      let cleaned = response
+          .replace(/\*\*Key Insight \([^)]+\):\*\*/g, '')
+          .replace(/\*\*Specific Advice \([^)]+\):\*\*/g, '')
+          .replace(/\(?\d+\s*words?\)?/gi, '')
+          .replace(/Under \d+ words/gi, '')
+          .replace(/In \d+ words/gi, '')
+          .replace(/Key Insight:/gi, '')
+          .replace(/Specific Advice:/gi, '')
+          .replace(/^\*\*|\*\*$/g, '')
+          .trim();
+
+      return cleaned;
+  }
+
+  // Format AI insight for better UX
+  function formatAIInsight(insight) {
+      if (!insight) return '';
+
+      // Split into paragraphs and format numbered lists
+      let formatted = insight
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0)
+          .map(line => {
+              // Format numbered points
+              if (/^\d+\./.test(line)) {
+                  return `<strong style="color: #0ea5e9;">• ${line.replace(/^\d+\.\s*/, '')}</strong>`;
+              }
+              // Format bold sections
+              line = line.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #1f2937;">$1</strong>');
+              return line;
+          })
+          .join('<br><br>');
+
+      return formatted;
   }
 
   // Enhanced error handling

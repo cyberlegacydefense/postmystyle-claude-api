@@ -90,9 +90,23 @@
             align-items: center;
         }
 
+        .logo {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
         .logo img {
-            height: 70px;
+            height: 85px;
             width: auto;
+            display: block;
         }
 
         .nav-links {
@@ -112,18 +126,22 @@
         }
 
         .cta-nav {
-            background: white;
-            color: #667eea;
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #667eea !important;
             padding: 0.5rem 1.5rem;
             border-radius: 25px;
             font-weight: 600;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .cta-nav:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            color: #667eea;
+            background: white !important;
+            color: #667eea !important;
+            opacity: 1 !important;
         }
 
         .hero {
@@ -273,10 +291,23 @@
         }
 
         .strategic-benefits {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 1.5rem;
             margin-bottom: 4rem;
+        }
+
+        .strategic-benefits-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .strategic-benefits-row.top-row {
+            margin-bottom: 1.5rem;
         }
 
         .benefit-card {
@@ -290,6 +321,8 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            flex: 0 0 280px;
+            max-width: 320px;
         }
 
         .benefit-card:hover {
@@ -498,9 +531,15 @@
                 display: none;
             }
 
-            .strategic-benefits {
-                grid-template-columns: 1fr;
-                gap: 1rem;
+            .strategic-benefits-row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .benefit-card {
+                flex: none;
+                width: 100%;
+                max-width: 400px;
             }
 
             .pricing-cards {
@@ -510,6 +549,17 @@
             .features-subtitle {
                 font-size: 1rem;
                 padding: 0 1rem;
+            }
+        }
+
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .strategic-benefits-row.top-row {
+                justify-content: space-around;
+            }
+
+            .strategic-benefits-row.bottom-row {
+                justify-content: center;
+                gap: 3rem;
             }
         }
     </style>
@@ -566,35 +616,39 @@
         </p>
 
         <div class="strategic-benefits">
-            <div class="benefit-card">
-                <div class="benefit-icon">📈</div>
-                <h4>Higher Engagement Rates</h4>
-                <p>UGC posts generate <strong>6.9x higher engagement</strong> than brand-generated content on social media.</p>
-                <small style="color: #888; font-style: italic;">Source: Comscore</small>
+            <div class="strategic-benefits-row top-row">
+                <div class="benefit-card">
+                    <div class="benefit-icon">📈</div>
+                    <h4>Higher Engagement Rates</h4>
+                    <p>UGC posts generate <strong>6.9x higher engagement</strong> than brand-generated content on social media.</p>
+                    <small style="color: #888; font-style: italic;">Source: Comscore</small>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🛡️</div>
+                    <h4>Increased Trust & Authenticity</h4>
+                    <p><strong>92% of consumers trust UGC</strong> more than traditional advertising.</p>
+                    <small style="color: #888; font-style: italic;">Source: Nielsen</small>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">💰</div>
+                    <h4>Improved Conversion Rates</h4>
+                    <p>Sites with UGC see a <strong>conversion lift of 10–20%</strong> compared to those without.</p>
+                    <small style="color: #888; font-style: italic;">Source: Yotpo</small>
+                </div>
             </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">🛡️</div>
-                <h4>Increased Trust & Authenticity</h4>
-                <p><strong>92% of consumers trust UGC</strong> more than traditional advertising.</p>
-                <small style="color: #888; font-style: italic;">Source: Nielsen</small>
-            </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">💰</div>
-                <h4>Improved Conversion Rates</h4>
-                <p>Sites with UGC see a <strong>conversion lift of 10–20%</strong> compared to those without.</p>
-                <small style="color: #888; font-style: italic;">Source: Yotpo</small>
-            </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">💸</div>
-                <h4>Lower Content Costs</h4>
-                <p>UGC reduces content creation costs by <strong>up to 50%</strong>, providing high-quality marketing at scale.</p>
-                <small style="color: #888; font-style: italic;">Source: Salesforce & Tint</small>
-            </div>
-            <div class="benefit-card">
-                <div class="benefit-icon">🎯</div>
-                <h4>Boosted Purchase Decisions</h4>
-                <p><strong>79% of people say UGC influences</strong> their purchase decisions, especially in beauty and lifestyle sectors.</p>
-                <small style="color: #888; font-style: italic;">Source: Stackla</small>
+            <div class="strategic-benefits-row bottom-row">
+                <div class="benefit-card">
+                    <div class="benefit-icon">💸</div>
+                    <h4>Lower Content Costs</h4>
+                    <p>UGC reduces content creation costs by <strong>up to 50%</strong>, providing high-quality marketing at scale.</p>
+                    <small style="color: #888; font-style: italic;">Source: Salesforce & Tint</small>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🎯</div>
+                    <h4>Boosted Purchase Decisions</h4>
+                    <p><strong>79% of people say UGC influences</strong> their purchase decisions, especially in beauty and lifestyle sectors.</p>
+                    <small style="color: #888; font-style: italic;">Source: Stackla</small>
+                </div>
             </div>
         </div>
 
