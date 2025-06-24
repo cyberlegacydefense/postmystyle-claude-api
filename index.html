@@ -481,11 +481,18 @@
             justify-content: center;
             color: white;
             text-decoration: none;
-            transition: background 0.3s ease;
+            transition: background 0.3s ease, transform 0.3s ease;
         }
 
         .social-links a:hover {
             background: #667eea;
+            transform: scale(1.1);
+        }
+
+        .social-links img {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) invert(1);
         }
 
         .footer-links {
@@ -730,9 +737,13 @@
 <footer class="footer">
     <div class="footer-content">
         <div class="social-links">
-            <a href="#" aria-label="Email">📧</a>
-            <a href="#" aria-label="Twitter">🐦</a>
-            <a href="#" aria-label="Instagram">📱</a>
+            <a href="mailto:help@postmystyle.ai" aria-label="Email">📧</a>
+            <a href="https://instagram.com/postmystyle.ai" target="_blank" aria-label="Instagram">
+                <img src="assets/images/instagram.png" alt="Instagram">
+            </a>
+            <a href="https://facebook.com/postmystyle.ai" target="_blank" aria-label="Facebook">
+                <img src="assets/images/facebook.png" alt="Facebook">
+            </a>
             <a href="#" aria-label="LinkedIn">💼</a>
         </div>
         <p>&copy; 2025 PostMyStyle.ai. All rights reserved.</p>
