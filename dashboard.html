@@ -1410,7 +1410,7 @@
   // Store analytics data globally for AI context
   let currentAnalyticsData = null;
 
-  // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE
+  // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE WITH ENHANCED ERROR HANDLING
   async function callAIService(prompt, actionType = 'overview', analyticsData = null) {
       try {
           let totalStylists, totalClients, totalShares, totalViews, engagementRate;
@@ -1449,28 +1449,46 @@
 
           const salonName = salonData?.salon_name || 'Your Salon';
 
+          // Simplified message to avoid 502 errors
           let message;
           if (actionType === 'overview') {
-              message = `You are a business advisor for ${salonName}. Current metrics: ${totalStylists} stylists, ${totalClients} clients, ${totalShares} posts, ${totalViews} views, ${engagementRate}% engagement. Provide 2-3 actionable business insights. Only respond with the insights, no meta-text about word limits.`;
+              message = `${salonName} salon: ${totalStylists} stylists, ${totalClients} clients, ${totalShares} posts. Give 2 business tips.`;
           } else {
-              message = `Business question for ${salonName} (${totalStylists} stylists, ${totalClients} clients): ${actionType}. Give specific actionable advice. Only respond with the advice, no meta-text about word limits or instructions.`;
+              message = `${salonName}: ${actionType}. Give specific advice.`;
           }
+
+          console.log('Calling AI with message:', message);
+
+          // Add timeout and simplified request
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
           const response = await fetch('https://postmystyle.ai/.netlify/functions/salon-ai', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ message: message })
+              body: JSON.stringify({ message: message }),
+              signal: controller.signal
           });
 
+          clearTimeout(timeoutId);
+
           if (!response.ok) {
+              console.error('AI service responded with status:', response.status);
               throw new Error(`AI service error: ${response.status}`);
           }
 
           const data = await response.json();
-          return data.content[0].text || 'AI advice generated successfully.';
+          console.log('AI service response:', data);
+
+          return data.content?.[0]?.text || data.message || 'AI advice generated successfully.';
 
       } catch (error) {
           console.error('AI service call failed:', error);
+
+          // If it's a network or server error, throw to trigger fallback
+          if (error.name === 'AbortError') {
+              throw new Error('AI service timeout');
+          }
           throw error;
       }
   }
@@ -1608,7 +1626,7 @@
           `Team Analytics Dashboard • Updated: ${timeString}${freshnessText} • Auto-refresh: ${AUTO_REFRESH_MINUTES}min`;
   }
 
-  // Load detailed stylists data for drill-down functionality
+  // Load detailed stylists data for drill-down functionality - FIXED CLIENT COUNT ISSUE
   async function loadStylistsData(salonId) {
       try {
           const { data: stylists, error } = await supabase
@@ -1618,23 +1636,33 @@
 
           if (error) throw error;
 
+          console.log('Loading stylist data for', stylists?.length || 0, 'stylists');
+
           // For each stylist, get their analytics
           stylistsData = await Promise.all(stylists.map(async (stylist) => {
+              console.log(`Loading data for stylist: ${stylist.stylist_name}`);
+
               // Get media sends
               const { data: mediaSends } = await supabase
                   .from('media_send')
                   .select('*')
                   .eq('stylist_id', stylist.id);
 
-              // Get unique clients
-              const { data: clients } = await supabase
+              // Get unique clients - ENSURE THIS WORKS
+              const { data: clients, error: clientError } = await supabase
                   .from('stylist_clients')
                   .select('client_id')
                   .eq('stylist_id', stylist.id);
 
+              if (clientError) {
+                  console.error(`Error loading clients for ${stylist.stylist_name}:`, clientError);
+              }
+
               const totalPosts = mediaSends?.length || 0;
               const totalViews = mediaSends?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
               const totalClients = clients?.length || 0;
+
+              console.log(`${stylist.stylist_name}: ${totalPosts} posts, ${totalViews} views, ${totalClients} clients`);
 
               // FIXED: Social shares are INTEGER counters, not booleans
               const totalSocialShares = mediaSends?.reduce((sum, ms) =>
@@ -1647,12 +1675,12 @@
                   ...stylist,
                   totalPosts,
                   totalViews,
-                  totalClients,
+                  totalClients, // ENSURE this is set
                   engagementRate
               };
           }));
 
-          console.log('Stylists data loaded:', stylistsData);
+          console.log('Final stylists data loaded:', stylistsData.map(s => `${s.stylist_name}: ${s.totalClients} clients`));
 
           // Update team performance table
           updateTeamPerformanceTable();
@@ -2233,13 +2261,41 @@
       } catch (error) {
           console.error('AI generation failed:', error);
 
-          // Fallback message based on salon data
-          const fallbackMessage = generateFallbackMessage();
+          // Enhanced fallback message based on salon data
+          const fallbackMessage = generateEnhancedFallbackMessage();
           displayAIMessage(fallbackMessage);
+
+          // Still update stage even if AI fails
+          const totalStylists = currentAnalyticsData?.total_stylists || 0;
+          const totalClients = currentAnalyticsData?.total_clients || 0;
+          const totalPosts = currentAnalyticsData?.total_media_sends || 0;
+          const stage = getSalonBusinessStage({ totalStylists, totalClients, totalShares: totalPosts });
+          updateAIStage(stage);
 
       } finally {
           isGeneratingAI = false;
           document.getElementById('aiLoading').style.display = 'none';
+      }
+  }
+
+  function generateEnhancedFallbackMessage() {
+      const totalStylists = currentAnalyticsData?.total_stylists || 0;
+      const totalClients = currentAnalyticsData?.total_clients || 0;
+      const totalPosts = currentAnalyticsData?.total_media_sends || 0;
+      const totalViews = currentAnalyticsData?.total_clicks || 0;
+      const salonName = salonData?.salon_name || 'Your salon';
+
+      // Enhanced fallback with real data analysis
+      if (totalStylists === 0) {
+          return `**${salonName} Growth Strategy:** You're in the setup phase! Priority actions: 1) Add your first stylist to the platform, 2) Complete your salon profile with photos and services, 3) Set up social media integration. Once you have stylists posting, you'll see powerful analytics and growth insights. Start building your digital presence today! 🚀`;
+      } else if (totalPosts === 0) {
+          return `**${salonName} Content Strategy:** You have ${totalStylists} stylist${totalStylists > 1 ? 's' : ''} ready to go! Next steps: 1) Create your first AI-generated posts showcasing recent work, 2) Share before/after transformations, 3) Encourage team to post consistently. Content is the foundation of digital growth - let's start creating! 📱`;
+      } else if (totalClients < 20) {
+          return `**${salonName} Client Growth:** Great progress with ${totalStylists} stylists creating ${totalPosts} posts! Focus on converting digital engagement to bookings: 1) Include clear calls-to-action in posts, 2) Showcase client testimonials and transformations, 3) Implement referral incentives. Your ${totalViews} views show audience interest - now capture them! 💪`;
+      } else {
+          const avgPostsPerStylist = Math.round(totalPosts / totalStylists);
+          const avgViewsPerPost = Math.round(totalViews / totalPosts);
+          return `**${salonName} Scale Strategy:** Strong foundation with ${totalStylists} stylists serving ${totalClients} clients! Your ${totalPosts} posts (${avgPostsPerStylist} avg per stylist) are generating ${totalViews} views (${avgViewsPerPost} per post). Focus on: 1) Premium service packages, 2) Client retention programs, 3) Expanding to new platforms. You're ready to scale! ⭐`;
       }
   }
 
@@ -2362,11 +2418,33 @@
           displayAIMessage(response);
       } catch (error) {
           console.error('Quick question failed:', error);
-          const fallback = generateQuickFallback(topic);
+
+          // Enhanced fallback based on current data and topic
+          const fallback = generateEnhancedQuickFallback(topic);
           displayAIMessage(fallback);
       } finally {
           document.getElementById('aiLoading').style.display = 'none';
       }
+  }
+
+  function generateEnhancedQuickFallback(topic) {
+      const salonName = salonData?.salon_name || 'Your salon';
+      const totalStylists = currentAnalyticsData?.total_stylists || 0;
+      const totalClients = currentAnalyticsData?.total_clients || 0;
+      const totalPosts = currentAnalyticsData?.total_media_sends || 0;
+      const totalViews = currentAnalyticsData?.total_clicks || 0;
+
+      const fallbacks = {
+          revenue: `**${salonName} Revenue Strategy:** With ${totalStylists} stylists and ${totalClients} clients, focus on: 1) **Premium Services** - Add color correction, specialty treatments, and package deals, 2) **Retail Revenue** - Your ${totalPosts} posts can showcase products used in services, 3) **Client Retention** - Implement loyalty programs and referral bonuses. Each post with ${Math.round(totalViews/Math.max(totalPosts,1))} avg views is a revenue opportunity! 💰`,
+
+          clients: `**${salonName} Client Acquisition:** Your ${totalPosts} posts generating ${totalViews} views show good reach! Convert this into bookings: 1) **Social Proof** - Share before/after transformations and client testimonials, 2) **Local SEO** - Tag location and use local hashtags, 3) **Limited Offers** - Create urgency with new client specials. Your digital foundation is strong - now capture the audience! 👥`,
+
+          team: `**${salonName} Team Performance:** With ${totalStylists} stylists, optimize performance through: 1) **Clear Goals** - Set monthly posting targets (aim for 15+ posts per stylist), 2) **Performance Incentives** - Bonus structure tied to social engagement and client retention, 3) **Skill Development** - Regular training on photography, social media, and client service. Strong teams drive strong businesses! ⭐`,
+
+          marketing: `**${salonName} Marketing Strategy:** Your ${totalPosts} posts and ${totalViews} views are a great start! Scale with: 1) **Platform Expansion** - If strong on Instagram, add TikTok for younger demographics, 2) **Content Variety** - Mix tutorials, transformations, behind-the-scenes, and product features, 3) **Community Engagement** - Partner with local influencers and businesses. Consistent posting + engagement = growth! 📱`
+      };
+
+      return fallbacks[topic] || fallbacks.revenue;
   }
 
   async function askCustomQuestion() {
@@ -2393,8 +2471,26 @@
           displayAIMessage(response);
       } catch (error) {
           console.error('Custom question failed:', error);
+
+          // Enhanced fallback with context
           const salonName = salonData?.salon_name || 'Your salon';
-          const fallback = `${salonName}, thank you for your question: "${question}". Based on your current metrics, I recommend focusing on consistent growth strategies. Your salon is making great progress! Try the quick action buttons for specific business advice.`;
+          const totalStylists = currentAnalyticsData?.total_stylists || 0;
+          const totalClients = currentAnalyticsData?.total_clients || 0;
+          const totalPosts = currentAnalyticsData?.total_media_sends || 0;
+
+          const fallback = `**${salonName} - Your Question:** "${question}"
+
+**Based on your current metrics** (${totalStylists} stylists, ${totalClients} clients, ${totalPosts} posts), here are some general recommendations:
+
+${totalPosts < 10 ?
+              '**Focus on Content Creation:** Start with consistent posting to build your digital presence.' :
+              totalClients < 50 ?
+              '**Focus on Client Conversion:** Your content is growing - now convert views to bookings.' :
+              '**Focus on Scaling:** Strong foundation in place - consider premium services and team expansion.'
+          }
+
+Try the quick action buttons above for specific business strategies, or contact our support team for personalized advice! 💡`;
+
           displayAIMessage(fallback);
       } finally {
           document.getElementById('aiLoading').style.display = 'none';
@@ -2459,59 +2555,79 @@
   }
 
   function generateStylistDrillDown() {
-      return stylistsData.map(stylist => `
-          <div class="stylist-card">
-              <div class="stylist-header">
-                  <div class="stylist-avatar-large">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
-                  <div class="stylist-info">
-                      <h3>${stylist.stylist_name}</h3>
-                      <p>${stylist.email || 'No email provided'}</p>
+      if (!stylistsData || stylistsData.length === 0) {
+          return `<div class="stylist-card"><p>No stylist data available. Please refresh the page.</p></div>`;
+      }
+
+      return stylistsData.map(stylist => {
+          console.log(`Rendering stylist ${stylist.stylist_name}: ${stylist.totalClients} clients`);
+          return `
+              <div class="stylist-card">
+                  <div class="stylist-header">
+                      <div class="stylist-avatar-large">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                      <div class="stylist-info">
+                          <h3>${stylist.stylist_name}</h3>
+                          <p>${stylist.email || 'No email provided'}</p>
+                      </div>
+                  </div>
+                  <div class="stylist-stats">
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${stylist.totalPosts || 0}</div>
+                          <div class="stylist-stat-label">Posts</div>
+                      </div>
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${stylist.totalViews || 0}</div>
+                          <div class="stylist-stat-label">Views</div>
+                      </div>
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${stylist.totalClients || 0}</div>
+                          <div class="stylist-stat-label">Clients</div>
+                      </div>
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${stylist.engagementRate || 0}%</div>
+                          <div class="stylist-stat-label">Engagement</div>
+                      </div>
                   </div>
               </div>
-              <div class="stylist-stats">
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalPosts}</div>
-                      <div class="stylist-stat-label">Posts</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalViews}</div>
-                      <div class="stylist-stat-label">Views</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalClients}</div>
-                      <div class="stylist-stat-label">Clients</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.engagementRate}%</div>
-                      <div class="stylist-stat-label">Engagement</div>
-                  </div>
-              </div>
-          </div>
-      `).join('');
+          `;
+      }).join('');
   }
 
   function generateClientDrillDown() {
-      return stylistsData.map(stylist => `
-          <div class="stylist-card">
-              <div class="stylist-header">
-                  <div class="stylist-avatar-large">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
-                  <div class="stylist-info">
-                      <h3>${stylist.stylist_name}</h3>
-                      <p>${stylist.totalClients} clients served</p>
+      if (!stylistsData || stylistsData.length === 0) {
+          return `<div class="stylist-card"><p>No stylist data available. Please refresh the page.</p></div>`;
+      }
+
+      return stylistsData.map(stylist => {
+          const clientsPerPost = stylist.totalPosts > 0 ? (stylist.totalClients / stylist.totalPosts).toFixed(1) : '0';
+          console.log(`Client breakdown for ${stylist.stylist_name}: ${stylist.totalClients} clients, ${clientsPerPost} per post`);
+
+          return `
+              <div class="stylist-card">
+                  <div class="stylist-header">
+                      <div class="stylist-avatar-large">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                      <div class="stylist-info">
+                          <h3>${stylist.stylist_name}</h3>
+                          <p>${stylist.totalClients || 0} clients served</p>
+                      </div>
+                  </div>
+                  <div class="stylist-stats">
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${stylist.totalClients || 0}</div>
+                          <div class="stylist-stat-label">Total Clients</div>
+                      </div>
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${clientsPerPost}</div>
+                          <div class="stylist-stat-label">Clients per Post</div>
+                      </div>
+                      <div class="stylist-stat">
+                          <div class="stylist-stat-number">${stylist.totalPosts || 0}</div>
+                          <div class="stylist-stat-label">Total Posts</div>
+                      </div>
                   </div>
               </div>
-              <div class="stylist-stats">
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalClients}</div>
-                      <div class="stylist-stat-label">Total Clients</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalClients / stylist.totalPosts * 10) / 10 : 0}</div>
-                      <div class="stylist-stat-label">Clients per Post</div>
-                  </div>
-              </div>
-          </div>
-      `).join('');
+          `;
+      }).join('');
   }
 
   function generatePostDrillDown() {
@@ -3115,7 +3231,13 @@
               const rawInsight = await callAIService('', prompt, currentAnalyticsData);
               aiInsight = cleanAIResponse(rawInsight);
           } catch (error) {
-              console.log('AI insight generation failed, using data analysis');
+              console.log('AI insight generation failed, using enhanced data analysis');
+
+              // Create enhanced AI-style insight from data analysis
+              if (insights.items.length > 0) {
+                  const topInsight = insights.items[0];
+                  aiInsight = `**Strategic Focus:** ${topInsight.description} Consider implementing this as your top priority to drive business growth and team performance improvement.`;
+              }
           }
 
           // Display insights
