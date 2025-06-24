@@ -1511,6 +1511,8 @@
           // Initialize charts only if not already initialized
           if (!activityChart) {
               initializeCharts();
+              // Show loading state immediately
+              showChartLoading();
           }
 
           // Start auto-refresh
@@ -1610,7 +1612,7 @@
           // Update team performance table
           updateTeamPerformanceTable();
 
-          // Update charts with real stylist data
+          // Update charts with real stylist data - ensure it's called
           updateCharts(currentAnalyticsData);
 
           // Generate AI performance insights
@@ -1817,56 +1819,89 @@
 
   // Update charts with real data
   function updateCharts(data) {
-      // Update chart data with real analytics
-      if (activityChart && stylistsData && stylistsData.length > 0) {
-          console.log('Updating chart with real stylist data:', stylistsData);
+      console.log('updateCharts called with data:', !!data, 'stylistsData length:', stylistsData?.length);
 
-          // Get top 4 stylists by activity
-          const topStylists = stylistsData
-              .sort((a, b) => b.totalPosts - a.totalPosts)
-              .slice(0, 4);
-
-          // Color palette for datasets
-          const colors = [
-              { border: '#667eea', background: '#667eea20' },
-              { border: '#4CAF50', background: '#4CAF5020' },
-              { border: '#FF9800', background: '#FF980020' },
-              { border: '#E91E63', background: '#E91E6320' }
-          ];
-
-          // Clear existing datasets
-          activityChart.data.datasets = [];
-
-          // Add dataset for each stylist
-          topStylists.forEach((stylist, index) => {
-              const color = colors[index] || colors[0];
-              const weeklyData = generateRealisticWeeklyData(stylist);
-
-              activityChart.data.datasets.push({
-                  label: stylist.stylist_name,
-                  data: weeklyData,
-                  borderColor: color.border,
-                  backgroundColor: color.background,
-                  tension: 0.4,
-                  fill: true
-              });
-          });
-
-          // If no stylists, show placeholder message
-          if (topStylists.length === 0) {
-              activityChart.data.datasets.push({
-                  label: 'Add stylists to see activity trends',
-                  data: [0, 0, 0, 0, 0, 0, 0],
-                  borderColor: '#ccc',
-                  backgroundColor: '#ccc20',
-                  tension: 0.4,
-                  fill: true
-              });
-          }
-
-          activityChart.update();
-          console.log('Chart updated successfully');
+      // Wait for both chart and stylist data to be ready
+      if (!activityChart) {
+          console.log('Chart not initialized yet, skipping update');
+          return;
       }
+
+      if (!stylistsData || stylistsData.length === 0) {
+          console.log('No stylist data available, showing placeholder');
+          showChartPlaceholder();
+          return;
+      }
+
+      console.log('Updating chart with real stylist data:', stylistsData);
+
+      // Get top 4 stylists by activity
+      const topStylists = stylistsData
+          .sort((a, b) => b.totalPosts - a.totalPosts)
+          .slice(0, 4);
+
+      // Color palette for datasets
+      const colors = [
+          { border: '#667eea', background: '#667eea20' },
+          { border: '#4CAF50', background: '#4CAF5020' },
+          { border: '#FF9800', background: '#FF980020' },
+          { border: '#E91E63', background: '#E91E6320' }
+      ];
+
+      // Clear existing datasets
+      activityChart.data.datasets = [];
+
+      // Add dataset for each stylist
+      topStylists.forEach((stylist, index) => {
+          const color = colors[index] || colors[0];
+          const weeklyData = generateRealisticWeeklyData(stylist);
+
+          activityChart.data.datasets.push({
+              label: stylist.stylist_name,
+              data: weeklyData,
+              borderColor: color.border,
+              backgroundColor: color.background,
+              tension: 0.4,
+              fill: true
+          });
+      });
+
+      activityChart.update('active');
+      console.log('Chart updated successfully with', topStylists.length, 'stylists');
+  }
+
+  // Show placeholder when no data is available
+  function showChartPlaceholder() {
+      if (!activityChart) return;
+
+      activityChart.data.datasets = [{
+          label: 'Add stylists to see activity trends',
+          data: [0, 0, 0, 0, 0, 0, 0],
+          borderColor: '#e2e8f0',
+          backgroundColor: '#f8fafc',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 0
+      }];
+
+      activityChart.update('none');
+  }
+
+  // Show loading state for chart
+  function showChartLoading() {
+      if (!activityChart) return;
+
+      activityChart.data.datasets = [{
+          label: 'Loading team data...',
+          data: [1, 2, 1, 3, 2, 4, 2],
+          borderColor: '#cbd5e1',
+          backgroundColor: '#f1f5f9',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 0
+      }];
+
+      activityChart.update('none');
   }
 
   // Generate realistic weekly data distribution based on stylist's actual activity
@@ -2495,7 +2530,11 @@
 
   // Chart update functions for different views
   function updateChartToPosts() {
-      if (!activityChart || !stylistsData.length) return;
+      console.log('Switching chart to Posts view');
+      if (!activityChart || !stylistsData?.length) {
+          console.log('Chart or data not ready for Posts view');
+          return;
+      }
 
       const topStylists = stylistsData
           .sort((a, b) => b.totalPosts - a.totalPosts)
@@ -2507,11 +2546,15 @@
               activityChart.data.datasets[index].data = weeklyData;
           }
       });
-      activityChart.update();
+      activityChart.update('active');
   }
 
   function updateChartToViews() {
-      if (!activityChart || !stylistsData.length) return;
+      console.log('Switching chart to Views view');
+      if (!activityChart || !stylistsData?.length) {
+          console.log('Chart or data not ready for Views view');
+          return;
+      }
 
       const topStylists = stylistsData
           .sort((a, b) => b.totalViews - a.totalViews)
@@ -2528,11 +2571,15 @@
               activityChart.data.datasets[index].data = weeklyData;
           }
       });
-      activityChart.update();
+      activityChart.update('active');
   }
 
   function updateChartToEngagement() {
-      if (!activityChart || !stylistsData.length) return;
+      console.log('Switching chart to Engagement view');
+      if (!activityChart || !stylistsData?.length) {
+          console.log('Chart or data not ready for Engagement view');
+          return;
+      }
 
       const topStylists = stylistsData
           .sort((a, b) => b.engagementRate - a.engagementRate)
@@ -2549,7 +2596,7 @@
               activityChart.data.datasets[index].data = weeklyData;
           }
       });
-      activityChart.update();
+      activityChart.update('active');
   }
 
   // Page visibility API for auto-refresh management
