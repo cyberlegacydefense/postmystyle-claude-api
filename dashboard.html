@@ -1426,11 +1426,17 @@
   // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE
   async function callAIService(prompt, actionType = 'overview') {
       try {
-          const totalStylists = parseInt(document.getElementById('totalStylists').textContent) || 0;
-          const totalClients = parseInt(document.getElementById('totalClients').textContent) || 0;
-          const totalShares = parseInt(document.getElementById('totalShares').textContent) || 0;
-          const totalViews = parseInt(document.getElementById('totalViews').textContent) || 0;
-          const engagementRate = parseInt(document.getElementById('engagementRate').textContent) || 0;
+          const totalStylistsEl = document.getElementById('totalStylists');
+          const totalClientsEl = document.getElementById('totalClients');
+          const totalSharesEl = document.getElementById('totalShares');
+          const totalViewsEl = document.getElementById('totalViews');
+          const engagementRateEl = document.getElementById('engagementRate');
+
+          const totalStylists = totalStylistsEl ? parseInt(totalStylistsEl.textContent) || 0 : 0;
+          const totalClients = totalClientsEl ? parseInt(totalClientsEl.textContent) || 0 : 0;
+          const totalShares = totalSharesEl ? parseInt(totalSharesEl.textContent) || 0 : 0;
+          const totalViews = totalViewsEl ? parseInt(totalViewsEl.textContent) || 0 : 0;
+          const engagementRate = engagementRateEl ? parseInt(engagementRateEl.textContent) || 0 : 0;
 
           const salonName = salonData?.salon_name || 'Your Salon';
 
