@@ -198,30 +198,6 @@
             animation: fadeInUp 1s ease-out 0.2s both;
         }
 
-        /* NEW: Hero highlight section */
-        .hero-highlight {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 25px;
-            padding: 2rem;
-            margin: 2rem auto;
-            max-width: 700px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            animation: fadeInUp 1s ease-out 0.3s both;
-        }
-
-        .hero-highlight p {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 0;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            background: linear-gradient(45deg, #fff, #f8f8f8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -298,88 +274,6 @@
             margin: 0 auto 3rem;
             font-size: 1.1rem;
             color: #666;
-        }
-
-        /* NEW: Standout callout section */
-        .standout-callout {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 3rem 2rem;
-            margin: 3rem auto;
-            border-radius: 25px;
-            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.3);
-            text-align: center;
-            max-width: 900px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .standout-callout::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
-            50% { transform: scale(1.1) rotate(180deg); opacity: 0.1; }
-        }
-
-        .standout-callout-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .standout-callout h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
-
-        .standout-callout p {
-            font-size: 1.2rem;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
-        }
-
-        .standout-callout p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* NEW: Context connection highlight */
-        .context-highlight {
-            background: linear-gradient(135deg, #2d3748, #4a5568);
-            color: white;
-            padding: 3rem 2rem;
-            margin: 4rem auto;
-            border-radius: 25px;
-            box-shadow: 0 20px 50px rgba(45, 55, 72, 0.4);
-            text-align: center;
-            max-width: 900px;
-            border: 2px solid #667eea;
-        }
-
-        .context-highlight h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            color: #667eea;
-            font-weight: 700;
-        }
-
-        .context-highlight p {
-            font-size: 1.2rem;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
-        }
-
-        .context-highlight strong {
-            color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
         }
 
         .strategic-benefits {
@@ -615,41 +509,6 @@
                 font-size: 2.5rem;
             }
 
-            .hero-highlight {
-                padding: 1.5rem;
-                margin: 1.5rem auto;
-            }
-
-            .hero-highlight p {
-                font-size: 1.2rem;
-            }
-
-            .standout-callout {
-                padding: 2rem 1.5rem;
-                margin: 2rem auto;
-            }
-
-            .standout-callout h3 {
-                font-size: 1.5rem;
-            }
-
-            .standout-callout p {
-                font-size: 1.1rem;
-            }
-
-            .context-highlight {
-                padding: 2rem 1.5rem;
-                margin: 2rem auto;
-            }
-
-            .context-highlight h3 {
-                font-size: 1.5rem;
-            }
-
-            .context-highlight p {
-                font-size: 1.1rem;
-            }
-
             .cta-buttons {
                 flex-direction: column;
                 align-items: center;
@@ -728,12 +587,6 @@
                 </div>
             </video>
         </div>
-
-        <!-- NEW: Hero highlight section -->
-        <div class="hero-highlight">
-            <p>Whether it's flawless hair or glowing skin, PostMyStyle helps you turn services into marketing moments — powered by AI and SMS.</p>
-        </div>
-
         <h1>Transform Your Salon's Marketing with AI</h1>
         <p>Capture your work. Send it in seconds. Get seen, get sales, get reviews — all before your client hits the parking lot.</p>
         <div class="cta-buttons">
@@ -748,15 +601,6 @@
         <p class="features-subtitle">
             <strong>PostMyStyle is an innovation solution</strong> built to work with what you already use, make you stand out, and help you grow by turning every service into personalized marketing, social exposure, and passive product revenue.
         </p>
-
-        <!-- NEW: Standout callout section -->
-        <div class="standout-callout">
-            <div class="standout-callout-content">
-                <h3>Your Secret to Effortless Marketing</h3>
-                <p>UGC builds trust, increases reach, and turns happy clients into your most valuable marketing team—all without lifting a finger.</p>
-                <p>In the beauty, wellness, and service industries, your clients walk out looking and feeling amazing—but that moment disappears unless it's captured and shared. With PostMyStyle, every transformation becomes branded content your client can instantly share on social media. It's authentic. It's personal. And it drives new business more effectively than any paid ad.</p>
-            </div>
-        </div>
 
         <div class="strategic-benefits">
             <div class="strategic-benefits-row top-row">
@@ -793,13 +637,6 @@
                     <small style="color: #888; font-style: italic;">Source: Stackla</small>
                 </div>
             </div>
-        </div>
-
-        <!-- NEW: Context connection highlight -->
-        <div class="context-highlight">
-            <h3>Marketing That Feels Personal, Not Pushy</h3>
-            <p>Context creates connection. When your message reflects the moment your client just experienced, it doesn't feel like marketing—it feels like a thoughtful extension of your service.</p>
-            <p>With PostMyStyle, we don't just send a video. We pair it with an <strong>AI-crafted message</strong> that reflects the exact service your client received, the products used, and even links to purchase those products. That means your marketing isn't just personal—it's timely, relevant, and designed to drive action.</p>
         </div>
 
         <h2 style="margin: 4rem 0 3rem; text-align: center;">Key Differentiators</h2>
