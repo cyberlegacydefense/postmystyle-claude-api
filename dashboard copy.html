@@ -192,7 +192,7 @@
         box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
     }
 
-    /* AI Business Advisor - Enhanced for Web */
+    /* AI Business Advisor */
     .ai-advisor-section {
         background: linear-gradient(135deg, #FF6B35, #ff8660);
         border-radius: 16px;
@@ -1411,6 +1411,202 @@
   // Store analytics data globally for AI context
   let currentAnalyticsData = null;
 
+  // FIXED: Simple aggregation approach - uses only media_send table
+  async function calculateRealTimeAnalytics(salonId) {
+    try {
+      console.log('📊 Calculating analytics using simple aggregation...');
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Get stylists count (this already works)
+      const { data: stylists } = await supabase
+        .from('stylists')
+        .select('id, created_at')
+        .eq('salon_id', salonId);
+
+      // Get media_send data (this already works)
+      const { data: currentPosts } = await supabase
+        .from('media_send')
+        .select('*, stylists!inner(salon_id)')
+        .eq('stylists.salon_id', salonId)
+        .gte('send_timestamp', thirtyDaysAgo.toISOString());
+
+      console.log(`📊 Found ${currentPosts?.length || 0} media_send records for analysis`);
+
+      if (!currentPosts) {
+        console.warn('No media_send data available');
+        return {
+          total_stylists: stylists?.length || 0,
+          total_clients: 0,
+          total_media_sends: 0,
+          total_clicks: 0,
+          total_instagram_shares: 0,
+          total_facebook_shares: 0,
+          total_tiktok_shares: 0,
+          total_product_clicks: 0,
+          growth_data: { shares_growth: 0, views_growth: 0, engagement_growth: 0 }
+        };
+      }
+
+      // SIMPLE AGGREGATION from media_send data we already have:
+      const totalStylists = stylists?.length || 0;
+
+      // FIXED: Count unique clients from media_send.client_id
+      const uniqueClientIds = new Set();
+      currentPosts.forEach(post => {
+        if (post.client_id) {
+          uniqueClientIds.add(post.client_id);
+        }
+      });
+      const totalClients = uniqueClientIds.size;
+
+      const totalShares = currentPosts.length;
+      const totalViews = currentPosts.reduce((sum, ms) => sum + (ms.click_count || 0), 0);
+
+      // FIXED: Sum product_clicks directly from media_send
+      const totalProductClicks = currentPosts.reduce((sum, ms) => sum + (ms.product_clicks || 0), 0);
+
+      // Social shares (these already work)
+      const totalInstagram = currentPosts.reduce((sum, ms) => sum + (ms.share_instagram || 0), 0);
+      const totalFacebook = currentPosts.reduce((sum, ms) => sum + (ms.share_facebook || 0), 0);
+      const totalTikTok = currentPosts.reduce((sum, ms) => sum + (ms.share_tiktok || 0), 0);
+
+      const result = {
+        total_stylists: totalStylists,
+        total_clients: totalClients, // FIXED: From unique client_ids in media_send
+        total_media_sends: totalShares,
+        total_clicks: totalViews,
+        total_instagram_shares: totalInstagram,
+        total_facebook_shares: totalFacebook,
+        total_tiktok_shares: totalTikTok,
+        total_product_clicks: totalProductClicks, // FIXED: From media_send.product_clicks
+        growth_data: {
+          shares_growth: 0,
+          views_growth: 0,
+          engagement_growth: 0,
+          current_posts: currentPosts
+        }
+      };
+
+      console.log('✅ SIMPLE AGGREGATION SUCCESS:', {
+        stylists: totalStylists,
+        clients: totalClients,
+        posts: totalShares,
+        views: totalViews,
+        productClicks: totalProductClicks
+      });
+
+      // Debug output for troubleshooting
+      if (totalClients === 0) {
+        console.warn('🔍 CLIENT DEBUG: No client_ids found in media_send records');
+        const sampleWithClients = currentPosts.filter(p => p.client_id).slice(0, 3);
+        console.warn('Sample records with client_id:', sampleWithClients.map(p => ({
+          id: p.id,
+          client_id: p.client_id,
+          client_name: p.client_name
+        })));
+      } else {
+        console.log(`✅ Found ${totalClients} unique clients:`, Array.from(uniqueClientIds).slice(0, 5));
+      }
+
+      if (totalProductClicks === 0) {
+        console.warn('🔍 PRODUCT DEBUG: No product_clicks found in media_send records');
+        const sampleWithProducts = currentPosts.filter(p => p.product_clicks > 0).slice(0, 3);
+        console.warn('Sample records with product_clicks:', sampleWithProducts.map(p => ({
+          id: p.id,
+          product_clicks: p.product_clicks
+        })));
+      } else {
+        console.log(`✅ Found ${totalProductClicks} total product clicks from ${currentPosts.filter(p => p.product_clicks > 0).length} records`);
+      }
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Simple aggregation failed:', error);
+      return null;
+    }
+  }
+
+  // FIXED: Simple stylist data loading using only media_send
+  async function loadStylistsData(salonId) {
+    try {
+      const { data: stylists, error } = await supabase
+        .from('stylists')
+        .select('*')
+        .eq('salon_id', salonId);
+
+      if (error) throw error;
+
+      console.log('👥 Loading stylist data using simple aggregation...');
+
+      // Get media_send data for all stylists (we know this works)
+      const { data: mediaSends, error: mediaError } = await supabase
+        .from('media_send')
+        .select('*')
+        .in('stylist_id', stylists.map(s => s.id));
+
+      if (mediaError) {
+        console.error('Media sends error:', mediaError);
+      }
+
+      // Process each stylist using ONLY the data we can successfully get
+      stylistsData = stylists.map(stylist => {
+        const stylistPosts = mediaSends?.filter(ms => ms.stylist_id === stylist.id) || [];
+
+        // FIXED: Count unique clients for this stylist from their media_send records
+        const uniqueClientIds = new Set();
+        stylistPosts.forEach(post => {
+          if (post.client_id) {
+            uniqueClientIds.add(post.client_id);
+          }
+        });
+
+        const totalPosts = stylistPosts.length;
+        const totalViews = stylistPosts.reduce((sum, ms) => sum + (ms.click_count || 0), 0);
+        const totalClients = uniqueClientIds.size;
+        const totalSocialShares = stylistPosts.reduce((sum, ms) =>
+          sum + (ms.share_instagram || 0) + (ms.share_facebook || 0) + (ms.share_tiktok || 0), 0);
+        const engagementRate = totalPosts > 0 ? Math.round((totalSocialShares / totalPosts) * 100) : 0;
+
+        console.log(`✅ ${stylist.stylist_name}: ${totalPosts} posts, ${totalViews} views, ${totalClients} clients, ${engagementRate}% engagement`);
+
+        return {
+          ...stylist,
+          totalPosts,
+          totalViews,
+          totalClients,
+          engagementRate
+        };
+      });
+
+      const summary = {
+        totalStylists: stylistsData.length,
+        totalClients: stylistsData.reduce((sum, s) => sum + s.totalClients, 0),
+        totalPosts: stylistsData.reduce((sum, s) => sum + s.totalPosts, 0),
+        totalViews: stylistsData.reduce((sum, s) => sum + s.totalViews, 0)
+      };
+
+      console.log('📊 SIMPLE STYLIST SUMMARY:', summary);
+
+      // Update UI
+      updateTeamPerformanceTable();
+      if (currentAnalyticsData) {
+        displayAnalytics(currentAnalyticsData);
+      }
+      setTimeout(() => {
+        if (activityChart) {
+          updateChartsSimplified(currentAnalyticsData);
+        }
+      }, 100);
+      generatePerformanceInsights();
+
+    } catch (error) {
+      console.error('❌ Simple stylist loading failed:', error);
+    }
+  }
+
   // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE WITH ENHANCED ERROR HANDLING
   async function callAIService(prompt, actionType = 'overview', analyticsData = null) {
       try {
@@ -1539,10 +1735,10 @@
           document.getElementById('salonNameHeader').textContent = salonData.salon_name;
           updateLastRefreshedTime();
 
-          // Load and display analytics
+          // Load and display analytics using FIXED simple aggregation
           await loadSalonAnalytics(salonData.salon_id);
 
-          // Load stylists data for drill-down
+          // Load stylists data using FIXED simple approach
           await loadStylistsData(salonData.salon_id);
 
           // Initialize charts only if not already initialized
@@ -1565,7 +1761,7 @@
 
           // Mark dashboard as loaded
           isDashboardLoaded = true;
-          console.log('Dashboard initialization complete');
+          console.log('✅ Dashboard initialization complete with simple aggregation fix');
 
       } catch (error) {
           console.error('Error loading dashboard:', error);
@@ -1573,433 +1769,24 @@
       }
   }
 
-  // Auto-refresh functionality
-  function startAutoRefresh() {
-      // Clear any existing interval
-      if (autoRefreshInterval) {
-          clearInterval(autoRefreshInterval);
-      }
-
-      // Set up auto-refresh every 5 minutes
-      autoRefreshInterval = setInterval(async () => {
-          console.log('Auto-refreshing dashboard data...');
-
-          // Show refresh indicator
-          showRefreshIndicator();
-
-          if (salonData) {
-              // Only refresh data, don't reinitialize charts
-              await loadSalonAnalytics(salonData.salon_id);
-              await loadStylistsData(salonData.salon_id);
-              updateLastRefreshedTime();
-          }
-      }, AUTO_REFRESH_MINUTES * 60 * 1000);
-
-      console.log(`Auto-refresh started: every ${AUTO_REFRESH_MINUTES} minutes`);
-  }
-
-  function showRefreshIndicator() {
-      const indicator = document.getElementById('refreshIndicator');
-      indicator.classList.add('show');
-
-      setTimeout(() => {
-          indicator.classList.remove('show');
-      }, 3000);
-  }
-
-  function updateLastRefreshedTime() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-      // Calculate data freshness
-      let freshnessText = '';
-      if (currentAnalyticsData?.growth_data?.current_posts?.length > 0) {
-          const latestPost = currentAnalyticsData.growth_data.current_posts
-              .sort((a, b) => new Date(b.send_timestamp) - new Date(a.send_timestamp))[0];
-
-          if (latestPost) {
-              const timeSinceLastPost = Math.floor((now - new Date(latestPost.send_timestamp)) / (1000 * 60 * 60));
-
-              if (timeSinceLastPost < 1) {
-                  freshnessText = ' • Last post: <1hr ago 🔥';
-              } else if (timeSinceLastPost < 24) {
-                  freshnessText = ` • Last post: ${timeSinceLastPost}hr ago`;
-              } else {
-                  const daysSince = Math.floor(timeSinceLastPost / 24);
-                  freshnessText = ` • Last post: ${daysSince}d ago`;
-              }
-          }
-      }
-
-      document.getElementById('dashboardSubtitle').innerHTML =
-          `Team Analytics Dashboard • Updated: ${timeString}${freshnessText} • Auto-refresh: ${AUTO_REFRESH_MINUTES}min`;
-  }
-
-  // Load detailed stylists data for drill-down functionality - FIXED CLIENT COUNT QUERY
-  async function loadStylistsData(salonId) {
-      try {
-          const { data: stylists, error } = await supabase
-              .from('stylists')
-              .select('*')
-              .eq('salon_id', salonId);
-
-          if (error) throw error;
-
-          console.log('Loading stylist data for', stylists?.length || 0, 'stylists');
-
-          // DEBUG: Check what's actually in the stylist_clients table for this salon
-          const { data: allStylistClients, error: debugError } = await supabase
-              .from('stylist_clients')
-              .select(`
-                  stylist_id,
-                  client_id,
-                  stylists!inner(salon_id)
-              `)
-              .eq('stylists.salon_id', salonId);
-
-          if (debugError) {
-              console.error('Debug query failed:', debugError);
-          } else {
-              console.log(`DEBUG: Found ${allStylistClients?.length || 0} total stylist-client relationships for salon ${salonId}`);
-              console.log('Sample relationships:', allStylistClients?.slice(0, 3));
-          }
-
-          // DEBUG: Check clients table accessibility
-          const { data: allClients, error: clientsTableError } = await supabase
-              .from('clients')
-              .select('id, name')
-              .limit(5);
-
-          if (clientsTableError) {
-              console.error('Cannot access clients table:', clientsTableError);
-          } else {
-              console.log(`DEBUG: Can access clients table, found ${allClients?.length || 0} sample clients`);
-          }
-
-          // For each stylist, get their analytics
-          stylistsData = await Promise.all(stylists.map(async (stylist) => {
-              console.log(`Loading data for stylist: ${stylist.stylist_name} (ID: ${stylist.id})`);
-
-              // Get media sends
-              const { data: mediaSends, error: mediaError } = await supabase
-                  .from('media_send')
-                  .select('*')
-                  .eq('stylist_id', stylist.id);
-
-              if (mediaError) {
-                  console.error(`Error loading media for ${stylist.stylist_name}:`, mediaError);
-              }
-
-              // PROPER CLIENT QUERY - Using stylist_clients -> clients relationship
-              let totalClients = 0;
-
-              // Method 1: Proper join query with clients table
-              const { data: clientRelationships, error: clientError } = await supabase
-                  .from('stylist_clients')
-                  .select(`
-                      client_id,
-                      clients!inner(id, name)
-                  `)
-                  .eq('stylist_id', stylist.id);
-
-              if (clientError) {
-                  console.error(`Client relationship query error for ${stylist.stylist_name}:`, clientError);
-
-                  // Method 2: Fallback - simple stylist_clients count
-                  const { data: simpleClients, error: simpleError } = await supabase
-                      .from('stylist_clients')
-                      .select('client_id')
-                      .eq('stylist_id', stylist.id);
-
-                  if (simpleError) {
-                      console.error(`Simple client query also failed for ${stylist.stylist_name}:`, simpleError);
-                  } else {
-                      totalClients = simpleClients?.length || 0;
-                      console.log(`Fallback client count for ${stylist.stylist_name}: ${totalClients}`);
-                  }
-              } else {
-                  // Get unique clients (in case of duplicate relationships)
-                  const uniqueClients = new Set(clientRelationships?.map(rel => rel.client_id) || []);
-                  totalClients = uniqueClients.size;
-                  console.log(`Proper client count for ${stylist.stylist_name}: ${totalClients} (relationships: ${clientRelationships?.length || 0})`);
-              }
-
-              // Method 3: If still zero, check media_send -> client relationships as backup
-              if (totalClients === 0 && mediaSends?.length > 0) {
-                  const uniqueMediaClients = new Set();
-                  mediaSends.forEach(media => {
-                      if (media.client_id) {
-                          uniqueMediaClients.add(media.client_id);
-                      }
-                  });
-                  const mediaClients = uniqueMediaClients.size;
-                  if (mediaClients > 0) {
-                      totalClients = mediaClients;
-                      console.log(`Media-based client count for ${stylist.stylist_name}: ${totalClients}`);
-                  }
-              }
-
-              const totalPosts = mediaSends?.length || 0;
-              const totalViews = mediaSends?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
-
-              console.log(`FINAL for ${stylist.stylist_name}: ${totalPosts} posts, ${totalViews} views, ${totalClients} clients`);
-
-              // FIXED: Social shares are INTEGER counters, not booleans
-              const totalSocialShares = mediaSends?.reduce((sum, ms) =>
-                  sum + (ms.share_instagram || 0) + (ms.share_facebook || 0) + (ms.share_tiktok || 0), 0) || 0;
-
-              // Engagement rate = average shares per post
-              const engagementRate = totalPosts > 0 ? Math.round((totalSocialShares / totalPosts) * 100) : 0;
-
-              return {
-                  ...stylist,
-                  totalPosts,
-                  totalViews,
-                  totalClients, // ENSURE this is properly set
-                  engagementRate
-              };
-          }));
-
-          console.log('Final stylists data loaded:', stylistsData.map(s => `${s.stylist_name}: ${s.totalClients} clients`));
-
-          // DEBUG: Show client count summary in console for troubleshooting
-          const totalClientsAllStylists = stylistsData.reduce((sum, s) => sum + s.totalClients, 0);
-          console.log('TOTAL CLIENT COUNT ACROSS ALL STYLISTS:', totalClientsAllStylists);
-
-          if (totalClientsAllStylists === 0) {
-              console.warn('⚠️ NO CLIENTS FOUND - Possible causes:');
-              console.warn('1. No data in stylist_clients table');
-              console.warn('2. stylist_clients.stylist_id doesn\'t match stylists.id');
-              console.warn('3. RLS (Row Level Security) policies blocking access');
-              console.warn('4. salon_id mismatch in stylists table');
-              console.warn('5. clients table has no corresponding records');
-
-              // Additional debug info
-              if (allStylistClients) {
-                  console.warn(`Found ${allStylistClients.length} stylist-client relationships in database`);
-                  const stylistIds = stylists?.map(s => s.id) || [];
-                  const foundStylistIds = allStylistClients.map(sc => sc.stylist_id);
-                  const missingIds = stylistIds.filter(id => !foundStylistIds.includes(id));
-                  if (missingIds.length > 0) {
-                      console.warn('Stylists with no client relationships:', missingIds);
-                  }
-              }
-          } else {
-              console.log('✅ Client data loaded successfully');
-          }
-
-          // Update team performance table
-          updateTeamPerformanceTable();
-
-          // FIXED: Update main dashboard totals after we have individual stylist data
-          if (currentAnalyticsData) {
-              displayAnalytics(currentAnalyticsData);
-          }
-
-          // FIXED: Simplified chart update - no more async issues
-          // Wait a bit for DOM to be ready, then update chart
-          setTimeout(() => {
-              if (activityChart) {
-                  updateChartsSimplified(currentAnalyticsData);
-              } else {
-                  console.log('Chart not ready, will retry on next refresh');
-              }
-          }, 100);
-
-          // Generate AI performance insights
-          generatePerformanceInsights();
-
-      } catch (error) {
-          console.error('Error loading stylists data:', error);
-      }
-  }
-
-  // Load salon analytics data with real-time calculations
+  // Load salon analytics data using FIXED simple aggregation
   async function loadSalonAnalytics(salonId) {
       try {
-          console.log('Loading analytics for salon:', salonId);
+          console.log('📊 Loading salon analytics with simple aggregation...');
 
-          // Calculate real-time analytics with historical comparisons
+          // Use the FIXED calculateRealTimeAnalytics function
           const analyticsData = await calculateRealTimeAnalytics(salonId);
 
           if (!analyticsData) {
               throw new Error('Failed to calculate analytics');
           }
 
-          console.log('Real-time analytics data:', analyticsData);
+          console.log('✅ Simple aggregation analytics successful:', analyticsData);
           displayAnalytics(analyticsData);
 
       } catch (error) {
-          console.error('Error loading salon analytics:', error);
-          await loadSalonAnalyticsManual(salonId);
-      }
-  }
-
-  // Calculate comprehensive real-time analytics with historical trends
-  async function calculateRealTimeAnalytics(salonId) {
-      try {
-          // Get current period data (last 30 days)
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-          const sixtyDaysAgo = new Date();
-          sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-          // Current stylists count
-          const { data: stylists } = await supabase
-              .from('stylists')
-              .select('id, created_at')
-              .eq('salon_id', salonId);
-
-          // Current clients (proper stylist_clients -> clients relationship)
-          const { data: recentClientActivity, error: clientsError } = await supabase
-              .from('stylist_clients')
-              .select(`
-                  client_id,
-                  assigned_at,
-                  stylists!inner(salon_id)
-              `)
-              .eq('stylists.salon_id', salonId);
-
-          if (clientsError) {
-              console.error('Salon clients query error:', clientsError);
-          }
-
-          // Media sends with historical comparison
-          const { data: currentPosts } = await supabase
-              .from('media_send')
-              .select('*, stylists!inner(salon_id)')
-              .eq('stylists.salon_id', salonId)
-              .gte('send_timestamp', thirtyDaysAgo.toISOString());
-
-          const { data: previousPosts } = await supabase
-              .from('media_send')
-              .select('*, stylists!inner(salon_id)')
-              .eq('stylists.salon_id', salonId)
-              .gte('send_timestamp', sixtyDaysAgo.toISOString())
-              .lt('send_timestamp', thirtyDaysAgo.toISOString());
-
-          // Product interactions
-          const { data: productClicks } = await supabase
-              .from('product_interactions')
-              .select('*, media_send!inner(*, stylists!inner(salon_id))')
-              .eq('media_send.stylists.salon_id', salonId)
-              .gte('click_timestamp', thirtyDaysAgo.toISOString());
-
-          // Calculate metrics
-          const totalStylists = stylists?.length || 0;
-          const totalClients = recentClientActivity ? new Set(recentClientActivity.map(c => c.client_id)).size : 0;
-          const totalShares = currentPosts?.length || 0;
-          const totalViews = currentPosts?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
-
-          // FIX: Social shares are INTEGER counters, not booleans
-          const totalInstagram = currentPosts?.reduce((sum, ms) => sum + (ms.share_instagram || 0), 0) || 0;
-          const totalFacebook = currentPosts?.reduce((sum, ms) => sum + (ms.share_facebook || 0), 0) || 0;
-          const totalTikTok = currentPosts?.reduce((sum, ms) => sum + (ms.share_tiktok || 0), 0) || 0;
-          const totalProductClicks = productClicks?.length || 0;
-
-          // Historical comparison calculations
-          const previousShares = previousPosts?.length || 0;
-          const previousViews = previousPosts?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
-          const previousInstagram = previousPosts?.reduce((sum, ms) => sum + (ms.share_instagram || 0), 0) || 0;
-          const previousFacebook = previousPosts?.reduce((sum, ms) => sum + (ms.share_facebook || 0), 0) || 0;
-          const previousTikTok = previousPosts?.reduce((sum, ms) => sum + (ms.share_tiktok || 0), 0) || 0;
-
-          // Calculate growth percentages
-          const sharesGrowth = previousShares > 0 ? Math.round(((totalShares - previousShares) / previousShares) * 100) : (totalShares > 0 ? 100 : 0);
-          const viewsGrowth = previousViews > 0 ? Math.round(((totalViews - previousViews) / previousViews) * 100) : (totalViews > 0 ? 100 : 0);
-          const engagementGrowth = (previousInstagram + previousFacebook + previousTikTok) > 0 ?
-              Math.round((((totalInstagram + totalFacebook + totalTikTok) - (previousInstagram + previousFacebook + previousTikTok)) / (previousInstagram + previousFacebook + previousTikTok)) * 100) :
-              ((totalInstagram + totalFacebook + totalTikTok) > 0 ? 100 : 0);
-
-          return {
-              total_stylists: totalStylists,
-              total_clients: totalClients,
-              total_media_sends: totalShares,
-              total_clicks: totalViews,
-              total_instagram_shares: totalInstagram,
-              total_facebook_shares: totalFacebook,
-              total_tiktok_shares: totalTikTok,
-              total_product_clicks: totalProductClicks,
-              // Historical growth data
-              growth_data: {
-                  shares_growth: sharesGrowth,
-                  views_growth: viewsGrowth,
-                  engagement_growth: engagementGrowth,
-                  current_posts: currentPosts || [],
-                  previous_posts: previousPosts || []
-              }
-          };
-
-      } catch (error) {
-          console.error('Error calculating real-time analytics:', error);
-          return null;
-      }
-  }
-
-  // Fallback: Calculate analytics manually if view doesn't work
-  async function loadSalonAnalyticsManual(salonId) {
-      try {
-          console.log('Calculating analytics manually for salon:', salonId);
-
-          // Get stylists count
-          const { data: stylists, error: stylistsError } = await supabase
-              .from('stylists')
-              .select('id')
-              .eq('salon_id', salonId);
-
-          // Get total clients through proper stylist_clients -> clients relationship
-          const { data: clients, error: clientsError } = await supabase
-              .from('stylist_clients')
-              .select(`
-                  client_id,
-                  stylists!inner(salon_id)
-              `)
-              .eq('stylists.salon_id', salonId);
-
-          if (clientsError) {
-              console.error('Manual clients query error:', clientsError);
-          }
-
-          // Get media sends (posts) from salon stylists
-          const { data: mediaSends, error: mediaError } = await supabase
-              .from('media_send')
-              .select('*, stylists!inner(salon_id)')
-              .eq('stylists.salon_id', salonId);
-
-          // Get product interactions
-          const { data: productInteractions, error: productError } = await supabase
-              .from('product_interactions')
-              .select('*, media_send!inner(*, stylists!inner(salon_id))')
-              .eq('media_send.stylists.salon_id', salonId);
-
-          // Calculate metrics
-          const totalStylists = stylists?.length || 0;
-          const totalClients = clients ? new Set(clients.map(c => c.client_id)).size : 0;
-          const totalShares = mediaSends?.length || 0;
-          const totalViews = mediaSends?.reduce((sum, ms) => sum + (ms.click_count || 0), 0) || 0;
-          const totalInstagram = mediaSends?.reduce((sum, ms) => sum + (ms.share_instagram || 0), 0) || 0;
-          const totalFacebook = mediaSends?.reduce((sum, ms) => sum + (ms.share_facebook || 0), 0) || 0;
-          const totalTikTok = mediaSends?.reduce((sum, ms) => sum + (ms.share_tiktok || 0), 0) || 0;
-          const totalProductClicks = productInteractions?.length || 0;
-
-          const analyticsData = {
-              total_stylists: totalStylists,
-              total_clients: totalClients,
-              total_media_sends: totalShares,
-              total_clicks: totalViews,
-              total_instagram_shares: totalInstagram,
-              total_facebook_shares: totalFacebook,
-              total_tiktok_shares: totalTikTok,
-              total_product_clicks: totalProductClicks
-          };
-
-          console.log('Manual analytics calculated:', analyticsData);
-          displayAnalytics(analyticsData);
-
-      } catch (error) {
-          console.error('Error calculating manual analytics:', error);
-          showErrorState('Unable to load analytics data.');
+          console.error('❌ Error loading salon analytics:', error);
+          showErrorState('Unable to load analytics data with simple aggregation.');
       }
   }
 
@@ -2036,7 +1823,7 @@
           updateCharts(data);
       }
 
-      console.log('Analytics displayed successfully');
+      console.log('✅ Analytics displayed successfully with simple aggregation');
   }
 
   // Update change indicators with real growth metrics
@@ -2222,97 +2009,6 @@
       });
   }
 
-  // SIMPLIFIED CHART CONTROL FUNCTIONS - NO MORE ASYNC
-  function updateChartToPostsSimplified() {
-      console.log('Switching chart to Posts view (simplified)');
-      if (!activityChart || !stylistsData?.length) {
-          console.log('Chart or data not ready for Posts view');
-          return;
-      }
-
-      const topStylists = stylistsData
-          .sort((a, b) => b.totalPosts - a.totalPosts)
-          .slice(0, 4);
-
-      // Update datasets synchronously
-      topStylists.forEach((stylist, index) => {
-          if (activityChart.data.datasets[index]) {
-              const weeklyData = generateRealisticWeeklyDataSync(stylist);
-              activityChart.data.datasets[index].data = weeklyData;
-              activityChart.data.datasets[index].label = stylist.stylist_name;
-          }
-      });
-
-      activityChart.update('active');
-      console.log('Chart updated to Posts view');
-  }
-
-  function updateChartToViewsSimplified() {
-      console.log('Switching chart to Views view (simplified)');
-      if (!activityChart || !stylistsData?.length) {
-          console.log('Chart or data not ready for Views view');
-          return;
-      }
-
-      const topStylists = stylistsData
-          .sort((a, b) => b.totalViews - a.totalViews)
-          .slice(0, 4);
-
-      // Generate view-based data synchronously
-      topStylists.forEach((stylist, index) => {
-          if (activityChart.data.datasets[index]) {
-              // Scale views data for chart readability
-              const weeklyPattern = [0.6, 1.2, 1.0, 1.1, 1.3, 1.4, 0.4];
-              const avgDailyViews = (stylist.totalViews / 30) / 5; // Scale down for readability
-              const weeklyData = weeklyPattern.map(multiplier =>
-                  Math.max(0, Math.round(avgDailyViews * multiplier * 7))
-              );
-              activityChart.data.datasets[index].data = weeklyData;
-              activityChart.data.datasets[index].label = stylist.stylist_name;
-          }
-      });
-
-      activityChart.update('active');
-      console.log('Chart updated to Views view');
-  }
-
-  function updateChartToEngagementSimplified() {
-      console.log('Switching chart to Engagement view (simplified)');
-      if (!activityChart || !stylistsData?.length) {
-          console.log('Chart or data not ready for Engagement view');
-          return;
-      }
-
-      const topStylists = stylistsData
-          .sort((a, b) => b.engagementRate - a.engagementRate)
-          .slice(0, 4);
-
-      // Generate engagement-based data synchronously
-      topStylists.forEach((stylist, index) => {
-          if (activityChart.data.datasets[index]) {
-              const weeklyPattern = [0.6, 1.2, 1.0, 1.1, 1.3, 1.4, 0.4];
-              const baseEngagement = stylist.engagementRate / 10; // Scale for chart
-              const weeklyData = weeklyPattern.map(multiplier =>
-                  Math.max(0, Math.round(baseEngagement * multiplier))
-              );
-              activityChart.data.datasets[index].data = weeklyData;
-              activityChart.data.datasets[index].label = stylist.stylist_name;
-          }
-      });
-
-      activityChart.update('active');
-      console.log('Chart updated to Engagement view');
-  }
-
-  // REMOVED OLD ASYNC CHART FUNCTIONS - NO LONGER NEEDED
-  // The following functions were causing race conditions and have been replaced
-  // with simplified synchronous versions above
-
-  // OLD FUNCTION: getRealWeeklyData - REMOVED
-  // OLD FUNCTION: getRealWeeklyViewsData - REMOVED
-  // OLD FUNCTION: getRealWeeklyEngagementData - REMOVED
-  // These have been replaced with generateRealisticWeeklyDataSync() for reliability
-
   // Show placeholder when no data is available
   function showChartPlaceholder() {
       if (!activityChart) return;
@@ -2363,25 +2059,6 @@
       }, 3000);
   }
 
-  // Generate realistic weekly data distribution based on stylist's actual activity
-  function generateRealisticWeeklyData(stylist) {
-      // Base weekly patterns (salon industry typical patterns)
-      // Tuesday-Saturday are peak days, Sunday/Monday slower
-      const weeklyPattern = [0.6, 1.2, 1.0, 1.1, 1.3, 1.4, 0.4]; // Mon-Sun multipliers
-
-      // Calculate average daily posts based on total posts
-      const avgDailyPosts = stylist.totalPosts / 30; // Assuming 30-day period
-
-      // Apply pattern and add some realistic variation
-      return weeklyPattern.map((multiplier, dayIndex) => {
-          const baseValue = avgDailyPosts * multiplier * 7; // Weekly scaling
-          const variation = (Math.random() - 0.5) * 0.3; // ±15% variation
-          const finalValue = Math.max(0, Math.round(baseValue * (1 + variation)));
-
-          return finalValue;
-      });
-  }
-
   // Update team performance table
   function updateTeamPerformanceTable() {
       const tableBody = document.getElementById('performanceTableBody');
@@ -2426,6 +2103,68 @@
               </div>
           `;
       }).join('');
+  }
+
+  // Auto-refresh functionality
+  function startAutoRefresh() {
+      // Clear any existing interval
+      if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+      }
+
+      // Set up auto-refresh every 5 minutes
+      autoRefreshInterval = setInterval(async () => {
+          console.log('Auto-refreshing dashboard data...');
+
+          // Show refresh indicator
+          showRefreshIndicator();
+
+          if (salonData) {
+              // Only refresh data, don't reinitialize charts
+              await loadSalonAnalytics(salonData.salon_id);
+              await loadStylistsData(salonData.salon_id);
+              updateLastRefreshedTime();
+          }
+      }, AUTO_REFRESH_MINUTES * 60 * 1000);
+
+      console.log(`Auto-refresh started: every ${AUTO_REFRESH_MINUTES} minutes`);
+  }
+
+  function showRefreshIndicator() {
+      const indicator = document.getElementById('refreshIndicator');
+      indicator.classList.add('show');
+
+      setTimeout(() => {
+          indicator.classList.remove('show');
+      }, 3000);
+  }
+
+  function updateLastRefreshedTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+      // Calculate data freshness
+      let freshnessText = '';
+      if (currentAnalyticsData?.growth_data?.current_posts?.length > 0) {
+          const latestPost = currentAnalyticsData.growth_data.current_posts
+              .sort((a, b) => new Date(b.send_timestamp) - new Date(a.send_timestamp))[0];
+
+          if (latestPost) {
+              const timeSinceLastPost = Math.floor((now - new Date(latestPost.send_timestamp)) / (1000 * 60 * 60));
+
+              if (timeSinceLastPost < 1) {
+                  freshnessText = ' • Last post: <1hr ago 🔥';
+              } else if (timeSinceLastPost < 24) {
+                  freshnessText = ` • Last post: ${timeSinceLastPost}hr ago`;
+              } else {
+                  const daysSince = Math.floor(timeSinceLastPost / 24);
+                  freshnessText = ` • Last post: ${daysSince}d ago`;
+              }
+          }
+      }
+
+      document.getElementById('dashboardSubtitle').innerHTML =
+          `Team Analytics Dashboard • Updated: ${timeString}${freshnessText} • Auto-refresh: ${AUTO_REFRESH_MINUTES}min`;
   }
 
   // AI BUSINESS ADVISOR FUNCTIONS
@@ -2515,21 +2254,6 @@
           const avgPostsPerStylist = Math.round(totalPosts / totalStylists);
           const avgViewsPerPost = Math.round(totalViews / totalPosts);
           return `**${salonName} Scale Strategy:** Strong foundation with ${totalStylists} stylists serving ${totalClients} clients! Your ${totalPosts} posts (${avgPostsPerStylist} avg per stylist) are generating ${totalViews} views (${avgViewsPerPost} per post). Focus on: 1) Premium service packages, 2) Client retention programs, 3) Expanding to new platforms. You're ready to scale! ⭐`;
-      }
-  }
-
-  function generateFallbackMessage() {
-      const totalStylists = currentAnalyticsData?.total_stylists || 0;
-      const totalClients = currentAnalyticsData?.total_clients || 0;
-      const totalPosts = currentAnalyticsData?.total_media_sends || 0;
-      const salonName = salonData?.salon_name || 'Your salon';
-
-      if (totalStylists === 0) {
-          return `${salonName}, you're just getting started! Focus on adding your first stylist and creating your salon profile. Once you have team members using PostMyStyle.AI, you'll unlock powerful analytics and growth insights. Start by inviting your stylists to join the platform! 🚀`;
-      } else if (totalClients < 20) {
-          return `${salonName}, great progress with ${totalStylists} stylist${totalStylists > 1 ? 's' : ''} on your team! Focus on building your client base through consistent social media posting and referral programs. Encourage your stylists to share before/after photos to showcase your work. Your ${totalPosts} posts are a great start! 💪`;
-      } else {
-          return `${salonName}, you're building momentum with ${totalStylists} stylists serving ${totalClients} clients! Your ${totalPosts} AI-generated posts show strong content creation. Focus on converting social engagement into bookings and consider premium service offerings to increase revenue per client. Keep up the excellent work! ⭐`;
       }
   }
 
@@ -2714,17 +2438,6 @@ Try the quick action buttons above for specific business strategies, or contact 
       } finally {
           document.getElementById('aiLoading').style.display = 'none';
       }
-  }
-
-  function generateQuickFallback(topic) {
-      const salonName = salonData?.salon_name || 'Your salon';
-      const fallbacks = {
-          revenue: `${salonName}, to increase revenue: 1) Introduce premium services and packages, 2) Implement referral rewards for existing clients, 3) Focus on retail product sales after each service. Your stylists can showcase products in their social posts!`,
-          clients: `${salonName}, to attract clients: 1) Encourage stylists to post before/after photos consistently, 2) Create limited-time new client promotions, 3) Partner with local businesses for cross-promotion. Social media consistency is key!`,
-          team: `${salonName}, for team performance: 1) Set monthly social posting goals for each stylist, 2) Implement performance bonuses tied to client retention, 3) Provide ongoing training on social media best practices. Support your team's growth!`,
-          marketing: `${salonName}, for marketing: 1) Post client transformations daily across all platforms, 2) Create hashtag campaigns specific to your salon, 3) Engage with local community events and influencers. Consistency builds brand recognition!`
-      };
-      return fallbacks[topic] || fallbacks.revenue;
   }
 
   // DRILL-DOWN FUNCTIONALITY
@@ -3081,248 +2794,6 @@ Try the quick action buttons above for specific business strategies, or contact 
       window.location.href = 'index.html';
   }
 
-  // Event Listeners
-
-  // Close modal when clicking outside
-  document.getElementById('drillDownModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-          closeDrillDown();
-      }
-  });
-
-  // Close modal with Escape key
-  document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-          closeDrillDown();
-      }
-  });
-
-  // Allow Enter key to send custom question
-  document.getElementById('customQuestionInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          askCustomQuestion();
-      }
-  });
-
-  // Add interactivity for chart controls
-  document.querySelectorAll('.chart-control').forEach(btn => {
-      btn.addEventListener('click', function() {
-          // Remove active class from siblings
-          this.parentNode.querySelectorAll('.chart-control').forEach(sibling => {
-              sibling.classList.remove('active');
-          });
-          // Add active class to clicked button
-          this.classList.add('active');
-
-          // Update chart based on selection
-          const chartType = this.textContent;
-          console.log('Switching to:', chartType);
-
-          // Update chart data based on selection
-          if (activityChart) {
-              switch(chartType) {
-                  case 'Views':
-                      updateChartToViews();
-                      break;
-                  case 'Engagement':
-                      updateChartToEngagement();
-                      break;
-                  default:
-                      updateChartToPosts();
-              }
-          }
-      });
-  });
-
-  // Add interactivity for time range selector
-  document.querySelectorAll('.time-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-          // Remove active class from siblings
-          this.parentNode.querySelectorAll('.time-btn').forEach(sibling => {
-              sibling.classList.remove('active');
-          });
-          // Add active class to clicked button
-          this.classList.add('active');
-
-          // Update data based on time range
-          const timeRange = this.textContent;
-          console.log('Time range changed to:', timeRange);
-
-          // Refresh data with new time range
-          if (salonData) {
-              loadSalonAnalytics(salonData.salon_id);
-              loadStylistsData(salonData.salon_id);
-          }
-      });
-  });
-
-  // Chart update functions for different views - SIMPLIFIED AND RELIABLE
-  function updateChartToPosts() {
-      updateChartToPostsSimplified();
-  }
-
-  function updateChartToViews() {
-      updateChartToViewsSimplified();
-  }
-
-  function updateChartToEngagement() {
-      updateChartToEngagementSimplified();
-  }
-
-  // REMOVED OLD ASYNC CHART FUNCTIONS - NO LONGER NEEDED
-  // The following functions were causing race conditions and have been replaced
-  // with simplified synchronous versions above
-
-  // OLD FUNCTION: getRealWeeklyData - REMOVED
-  // OLD FUNCTION: getRealWeeklyViewsData - REMOVED
-  // OLD FUNCTION: getRealWeeklyEngagementData - REMOVED
-  // These have been replaced with generateRealisticWeeklyDataSync() for reliability
-
-  // Page visibility API for auto-refresh management
-  document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-          // Page is hidden, pause auto-refresh
-          if (autoRefreshInterval) {
-              clearInterval(autoRefreshInterval);
-              console.log('Auto-refresh paused - page hidden');
-          }
-      } else {
-          // Page is visible, resume auto-refresh (but don't reinitialize charts)
-          startAutoRefresh();
-          console.log('Auto-refresh resumed - page visible');
-      }
-  });
-
-  // Cleanup on page unload
-  window.addEventListener('beforeunload', function() {
-      if (autoRefreshInterval) {
-          clearInterval(autoRefreshInterval);
-      }
-  });
-
-  // Enhanced performance table functionality
-  function openStylistDetail(stylistId) {
-      const stylist = stylistsData.find(s => s.id === stylistId);
-      if (!stylist) return;
-
-      const modal = document.getElementById('drillDownModal');
-      const title = document.getElementById('modalTitle');
-      const content = document.getElementById('modalContent');
-
-      title.textContent = `${stylist.stylist_name} - Detailed Performance`;
-      content.innerHTML = `
-          <div class="stylist-card">
-              <div class="stylist-header">
-                  <div class="stylist-avatar-large">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
-                  <div class="stylist-info">
-                      <h3>${stylist.stylist_name}</h3>
-                      <p>${stylist.email || 'No email provided'}</p>
-                      <p style="color: #667eea; font-weight: 600;">Performance Score: ${Math.round((stylist.totalPosts * 0.3) + (stylist.totalViews * 0.4) + (stylist.engagementRate * 0.3))}/100</p>
-                  </div>
-              </div>
-              <div class="stylist-stats">
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalPosts}</div>
-                      <div class="stylist-stat-label">Total Posts</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalViews}</div>
-                      <div class="stylist-stat-label">Total Views</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalClients}</div>
-                      <div class="stylist-stat-label">Total Clients</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.engagementRate}%</div>
-                      <div class="stylist-stat-label">Engagement Rate</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalViews / stylist.totalPosts) : 0}</div>
-                      <div class="stylist-stat-label">Avg Views/Post</div>
-                  </div>
-                  <div class="stylist-stat">
-                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalClients / stylist.totalPosts * 10) / 10 : 0}</div>
-                      <div class="stylist-stat-label">Clients/Post Ratio</div>
-                  </div>
-              </div>
-          </div>
-
-          <div style="margin-top: 2rem;">
-              <h4 style="color: #333; margin-bottom: 1rem;">💡 Performance Insights</h4>
-              <div class="insight-item ${stylist.totalPosts >= 20 ? 'insight-positive' : 'insight-warning'}">
-                  <div class="insight-title">📱 Content Creation</div>
-                  <div class="insight-desc">${stylist.totalPosts >= 20 ?
-                      `Excellent content creation with ${stylist.totalPosts} posts! Keep up the consistent posting.` :
-                      `Room for improvement - aim for 20+ posts. Currently at ${stylist.totalPosts} posts.`}</div>
-              </div>
-              <div class="insight-item ${stylist.engagementRate >= 50 ? 'insight-positive' : 'insight-warning'}">
-                  <div class="insight-title">❤️ Engagement Performance</div>
-                  <div class="insight-desc">${stylist.engagementRate >= 50 ?
-                      `Strong engagement at ${stylist.engagementRate}%! Your content resonates well with audiences.` :
-                      `Focus on engagement - currently at ${stylist.engagementRate}%. Try more interactive content.`}</div>
-              </div>
-              <div class="insight-item ${stylist.totalClients >= 15 ? 'insight-positive' : ''}">
-                  <div class="insight-title">👥 Client Base</div>
-                  <div class="insight-desc">${stylist.totalClients >= 15 ?
-                      `Great client base with ${stylist.totalClients} clients! Focus on retention and referrals.` :
-                      `Building client base - currently ${stylist.totalClients} clients. Increase social media visibility.`}</div>
-              </div>
-          </div>
-      `;
-
-      modal.classList.add('active');
-  }
-
-  // Sidebar navigation functions
-  function showDashboard() {
-      setActiveNavItem('Dashboard');
-      // Dashboard is already visible - could scroll to top or refresh
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function showTeamPerformance() {
-      setActiveNavItem('Team Performance');
-      // Scroll to team performance table
-      document.querySelector('.performance-table').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function showSocialAnalytics() {
-      setActiveNavItem('Social Analytics');
-      // Scroll to metrics grid (social analytics cards)
-      document.querySelector('.metrics-grid').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function showRevenueTracking() {
-      setActiveNavItem('Revenue Tracking');
-      alert('Revenue Tracking feature coming soon! This will show detailed financial analytics and revenue trends.');
-  }
-
-  function showGoalsTargets() {
-      setActiveNavItem('Goals & Targets');
-      alert('Goals & Targets feature coming soon! This will help you set and track performance goals for your team.');
-  }
-
-  function showSettings() {
-      setActiveNavItem('Settings');
-      alert('Settings feature coming soon! This will allow you to configure salon preferences and user settings.');
-  }
-
-  function setActiveNavItem(itemName) {
-      // Remove active class from all nav links
-      document.querySelectorAll('.nav-link').forEach(link => {
-          link.classList.remove('active');
-      });
-
-      // Add active class to clicked item
-      document.querySelectorAll('.nav-link').forEach(link => {
-          if (link.textContent.trim().includes(itemName)) {
-              link.classList.add('active');
-          }
-      });
-  }
-
   // Enhanced AI Performance Insights Generator with real business intelligence
   async function generatePerformanceInsights() {
       const insightsContent = document.getElementById('performanceInsightsContent');
@@ -3468,12 +2939,6 @@ Try the quick action buttons above for specific business strategies, or contact 
           });
       }
 
-      // Social platform performance analysis
-      const platformAnalysis = await analyzeSocialPlatformPerformance();
-      if (platformAnalysis) {
-          insights.push(platformAnalysis);
-      }
-
       // Team consistency analysis
       const consistencyInsight = analyzeTeamConsistency(stylistsData);
       if (consistencyInsight) {
@@ -3494,46 +2959,6 @@ Try the quick action buttons above for specific business strategies, or contact 
       const engagementScore = Math.min((stylist.engagementRate / 100) * 20, 20); // Max 20 points
 
       return postScore + viewScore + clientScore + engagementScore;
-  }
-
-  // Analyze social platform performance distribution
-  async function analyzeSocialPlatformPerformance() {
-      try {
-          if (!currentAnalyticsData) return null;
-
-          const instagram = currentAnalyticsData.total_instagram_shares || 0;
-          const facebook = currentAnalyticsData.total_facebook_shares || 0;
-          const tiktok = currentAnalyticsData.total_tiktok_shares || 0;
-          const total = instagram + facebook + tiktok;
-
-          if (total === 0) return null;
-
-          const instagramPercent = Math.round((instagram / total) * 100);
-          const facebookPercent = Math.round((facebook / total) * 100);
-          const tiktokPercent = Math.round((tiktok / total) * 100);
-
-          // Determine dominant platform and recommendations
-          let message = '';
-          if (instagramPercent > 60) {
-              message = `Instagram dominates your social presence (${instagramPercent}%). Consider diversifying to TikTok and Facebook for broader reach.`;
-          } else if (tiktokPercent > 40) {
-              message = `Strong TikTok performance (${tiktokPercent}%). This younger audience engagement is valuable - maintain consistency while growing Instagram.`;
-          } else if (facebookPercent > 40) {
-              message = `Facebook shows strong engagement (${facebookPercent}%). This mature audience has high buying power - focus on service promotions.`;
-          } else {
-              message = `Balanced social distribution: Instagram ${instagramPercent}%, Facebook ${facebookPercent}%, TikTok ${tiktokPercent}%. Good multi-platform strategy.`;
-          }
-
-          return {
-              type: 'insight-positive',
-              title: '📱 Social Platform Analysis',
-              description: message
-          };
-
-      } catch (error) {
-          console.error('Error analyzing social platform performance:', error);
-          return null;
-      }
   }
 
   // Analyze team posting consistency
@@ -3622,6 +3047,324 @@ Try the quick action buttons above for specific business strategies, or contact 
       return formatted;
   }
 
+  // Enhanced performance table functionality
+  function openStylistDetail(stylistId) {
+      const stylist = stylistsData.find(s => s.id === stylistId);
+      if (!stylist) return;
+
+      const modal = document.getElementById('drillDownModal');
+      const title = document.getElementById('modalTitle');
+      const content = document.getElementById('modalContent');
+
+      title.textContent = `${stylist.stylist_name} - Detailed Performance`;
+      content.innerHTML = `
+          <div class="stylist-card">
+              <div class="stylist-header">
+                  <div class="stylist-avatar-large">${stylist.stylist_name.charAt(0).toUpperCase()}</div>
+                  <div class="stylist-info">
+                      <h3>${stylist.stylist_name}</h3>
+                      <p>${stylist.email || 'No email provided'}</p>
+                      <p style="color: #667eea; font-weight: 600;">Performance Score: ${Math.round((stylist.totalPosts * 0.3) + (stylist.totalViews * 0.4) + (stylist.engagementRate * 0.3))}/100</p>
+                  </div>
+              </div>
+              <div class="stylist-stats">
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts}</div>
+                      <div class="stylist-stat-label">Total Posts</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalViews}</div>
+                      <div class="stylist-stat-label">Total Views</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalClients}</div>
+                      <div class="stylist-stat-label">Total Clients</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.engagementRate}%</div>
+                      <div class="stylist-stat-label">Engagement Rate</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalViews / stylist.totalPosts) : 0}</div>
+                      <div class="stylist-stat-label">Avg Views/Post</div>
+                  </div>
+                  <div class="stylist-stat">
+                      <div class="stylist-stat-number">${stylist.totalPosts > 0 ? Math.round(stylist.totalClients / stylist.totalPosts * 10) / 10 : 0}</div>
+                      <div class="stylist-stat-label">Clients/Post Ratio</div>
+                  </div>
+              </div>
+          </div>
+
+          <div style="margin-top: 2rem;">
+              <h4 style="color: #333; margin-bottom: 1rem;">💡 Performance Insights</h4>
+              <div class="insight-item ${stylist.totalPosts >= 20 ? 'insight-positive' : 'insight-warning'}">
+                  <div class="insight-title">📱 Content Creation</div>
+                  <div class="insight-desc">${stylist.totalPosts >= 20 ?
+                      `Excellent content creation with ${stylist.totalPosts} posts! Keep up the consistent posting.` :
+                      `Room for improvement - aim for 20+ posts. Currently at ${stylist.totalPosts} posts.`}</div>
+              </div>
+              <div class="insight-item ${stylist.engagementRate >= 50 ? 'insight-positive' : 'insight-warning'}">
+                  <div class="insight-title">❤️ Engagement Performance</div>
+                  <div class="insight-desc">${stylist.engagementRate >= 50 ?
+                      `Strong engagement at ${stylist.engagementRate}%! Your content resonates well with audiences.` :
+                      `Focus on engagement - currently at ${stylist.engagementRate}%. Try more interactive content.`}</div>
+              </div>
+              <div class="insight-item ${stylist.totalClients >= 15 ? 'insight-positive' : ''}">
+                  <div class="insight-title">👥 Client Base</div>
+                  <div class="insight-desc">${stylist.totalClients >= 15 ?
+                      `Great client base with ${stylist.totalClients} clients! Focus on retention and referrals.` :
+                      `Building client base - currently ${stylist.totalClients} clients. Increase social media visibility.`}</div>
+              </div>
+          </div>
+      `;
+
+      modal.classList.add('active');
+  }
+
+  // Sidebar navigation functions
+  function showDashboard() {
+      setActiveNavItem('Dashboard');
+      // Dashboard is already visible - could scroll to top or refresh
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showTeamPerformance() {
+      setActiveNavItem('Team Performance');
+      // Scroll to team performance table
+      document.querySelector('.performance-table').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function showSocialAnalytics() {
+      setActiveNavItem('Social Analytics');
+      // Scroll to metrics grid (social analytics cards)
+      document.querySelector('.metrics-grid').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function showRevenueTracking() {
+      setActiveNavItem('Revenue Tracking');
+      alert('Revenue Tracking feature coming soon! This will show detailed financial analytics and revenue trends.');
+  }
+
+  function showGoalsTargets() {
+      setActiveNavItem('Goals & Targets');
+      alert('Goals & Targets feature coming soon! This will help you set and track performance goals for your team.');
+  }
+
+  function showSettings() {
+      setActiveNavItem('Settings');
+      alert('Settings feature coming soon! This will allow you to configure salon preferences and user settings.');
+  }
+
+  function setActiveNavItem(itemName) {
+      // Remove active class from all nav links
+      document.querySelectorAll('.nav-link').forEach(link => {
+          link.classList.remove('active');
+      });
+
+      // Add active class to clicked item
+      document.querySelectorAll('.nav-link').forEach(link => {
+          if (link.textContent.trim().includes(itemName)) {
+              link.classList.add('active');
+          }
+      });
+  }
+
+  // Chart control functions - SIMPLIFIED
+  function updateCharts(data) {
+      updateChartsSimplified(data);
+  }
+
+  function updateChartToPosts() {
+      updateChartToPostsSimplified();
+  }
+
+  function updateChartToViews() {
+      updateChartToViewsSimplified();
+  }
+
+  function updateChartToEngagement() {
+      updateChartToEngagementSimplified();
+  }
+
+  function updateChartToPostsSimplified() {
+      console.log('Switching chart to Posts view (simplified)');
+      if (!activityChart || !stylistsData?.length) {
+          console.log('Chart or data not ready for Posts view');
+          return;
+      }
+
+      const topStylists = stylistsData
+          .sort((a, b) => b.totalPosts - a.totalPosts)
+          .slice(0, 4);
+
+      // Update datasets synchronously
+      topStylists.forEach((stylist, index) => {
+          if (activityChart.data.datasets[index]) {
+              const weeklyData = generateRealisticWeeklyDataSync(stylist);
+              activityChart.data.datasets[index].data = weeklyData;
+              activityChart.data.datasets[index].label = stylist.stylist_name;
+          }
+      });
+
+      activityChart.update('active');
+      console.log('Chart updated to Posts view');
+  }
+
+  function updateChartToViewsSimplified() {
+      console.log('Switching chart to Views view (simplified)');
+      if (!activityChart || !stylistsData?.length) {
+          console.log('Chart or data not ready for Views view');
+          return;
+      }
+
+      const topStylists = stylistsData
+          .sort((a, b) => b.totalViews - a.totalViews)
+          .slice(0, 4);
+
+      // Generate view-based data synchronously
+      topStylists.forEach((stylist, index) => {
+          if (activityChart.data.datasets[index]) {
+              // Scale views data for chart readability
+              const weeklyPattern = [0.6, 1.2, 1.0, 1.1, 1.3, 1.4, 0.4];
+              const avgDailyViews = (stylist.totalViews / 30) / 5; // Scale down for readability
+              const weeklyData = weeklyPattern.map(multiplier =>
+                  Math.max(0, Math.round(avgDailyViews * multiplier * 7))
+              );
+              activityChart.data.datasets[index].data = weeklyData;
+              activityChart.data.datasets[index].label = stylist.stylist_name;
+          }
+      });
+
+      activityChart.update('active');
+      console.log('Chart updated to Views view');
+  }
+
+  function updateChartToEngagementSimplified() {
+      console.log('Switching chart to Engagement view (simplified)');
+      if (!activityChart || !stylistsData?.length) {
+          console.log('Chart or data not ready for Engagement view');
+          return;
+      }
+
+      const topStylists = stylistsData
+          .sort((a, b) => b.engagementRate - a.engagementRate)
+          .slice(0, 4);
+
+      // Generate engagement-based data synchronously
+      topStylists.forEach((stylist, index) => {
+          if (activityChart.data.datasets[index]) {
+              const weeklyPattern = [0.6, 1.2, 1.0, 1.1, 1.3, 1.4, 0.4];
+              const baseEngagement = stylist.engagementRate / 10; // Scale for chart
+              const weeklyData = weeklyPattern.map(multiplier =>
+                  Math.max(0, Math.round(baseEngagement * multiplier))
+              );
+              activityChart.data.datasets[index].data = weeklyData;
+              activityChart.data.datasets[index].label = stylist.stylist_name;
+          }
+      });
+
+      activityChart.update('active');
+      console.log('Chart updated to Engagement view');
+  }
+
+  // Event Listeners
+
+  // Close modal when clicking outside
+  document.getElementById('drillDownModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+          closeDrillDown();
+      }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+          closeDrillDown();
+      }
+  });
+
+  // Allow Enter key to send custom question
+  document.getElementById('customQuestionInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          askCustomQuestion();
+      }
+  });
+
+  // Add interactivity for chart controls
+  document.querySelectorAll('.chart-control').forEach(btn => {
+      btn.addEventListener('click', function() {
+          // Remove active class from siblings
+          this.parentNode.querySelectorAll('.chart-control').forEach(sibling => {
+              sibling.classList.remove('active');
+          });
+          // Add active class to clicked button
+          this.classList.add('active');
+
+          // Update chart based on selection
+          const chartType = this.textContent;
+          console.log('Switching to:', chartType);
+
+          // Update chart data based on selection
+          if (activityChart) {
+              switch(chartType) {
+                  case 'Views':
+                      updateChartToViews();
+                      break;
+                  case 'Engagement':
+                      updateChartToEngagement();
+                      break;
+                  default:
+                      updateChartToPosts();
+              }
+          }
+      });
+  });
+
+  // Add interactivity for time range selector
+  document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+          // Remove active class from siblings
+          this.parentNode.querySelectorAll('.time-btn').forEach(sibling => {
+              sibling.classList.remove('active');
+          });
+          // Add active class to clicked button
+          this.classList.add('active');
+
+          // Update data based on time range
+          const timeRange = this.textContent;
+          console.log('Time range changed to:', timeRange);
+
+          // Refresh data with new time range
+          if (salonData) {
+              loadSalonAnalytics(salonData.salon_id);
+              loadStylistsData(salonData.salon_id);
+          }
+      });
+  });
+
+  // Page visibility API for auto-refresh management
+  document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+          // Page is hidden, pause auto-refresh
+          if (autoRefreshInterval) {
+              clearInterval(autoRefreshInterval);
+              console.log('Auto-refresh paused - page hidden');
+          }
+      } else {
+          // Page is visible, resume auto-refresh (but don't reinitialize charts)
+          startAutoRefresh();
+          console.log('Auto-refresh resumed - page visible');
+      }
+  });
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', function() {
+      if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+      }
+  });
+
   // Enhanced error handling
   window.addEventListener('error', function(e) {
       console.error('JavaScript error:', e.error);
@@ -3647,14 +3390,48 @@ Try the quick action buttons above for specific business strategies, or contact 
   // Initialize dashboard when page loads - single initialization
   if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function() {
-          console.log('PostMyStyle.ai Dashboard initializing...');
+          console.log('🚀 PostMyStyle.ai Dashboard initializing with SIMPLE AGGREGATION FIX...');
           loadDashboard();
       });
   } else {
       // DOM already loaded
-      console.log('PostMyStyle.ai Dashboard initializing (DOM ready)...');
+      console.log('🚀 PostMyStyle.ai Dashboard initializing with SIMPLE AGGREGATION FIX (DOM ready)...');
       loadDashboard();
   }
+
+  // Debug helper - add to global scope for console testing
+  window.debugDashboard = {
+      testSimpleAggregation: async function() {
+          if (!salonData) {
+              console.log('No salon data available');
+              return;
+          }
+
+          console.log('🧪 Testing simple aggregation approach...');
+          const result = await calculateRealTimeAnalytics(salonData.salon_id);
+          console.log('Result:', result);
+          return result;
+      },
+
+      showCurrentData: function() {
+          console.log('📊 Current dashboard state:', {
+              salonData: salonData,
+              currentAnalyticsData: currentAnalyticsData,
+              stylistsData: stylistsData?.length ? `${stylistsData.length} stylists loaded` : 'No stylists data'
+          });
+      },
+
+      forceRefresh: function() {
+          console.log('🔄 Force refreshing dashboard...');
+          if (salonData) {
+              loadSalonAnalytics(salonData.salon_id);
+              loadStylistsData(salonData.salon_id);
+          }
+      }
+  };
+
+  console.log('✅ SIMPLE AGGREGATION DASHBOARD LOADED');
+  console.log('💡 Available debug commands: window.debugDashboard.testSimpleAggregation(), window.debugDashboard.showCurrentData(), window.debugDashboard.forceRefresh()');
 
 </script>
 </body>
