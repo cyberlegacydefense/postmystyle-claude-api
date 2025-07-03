@@ -6,6 +6,73 @@
   <link rel="icon" type="image/png" href="assets/images/favicon.png">
   <title>Dashboard - PostMyStyle.ai</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <!-- Enhanced Supabase Loading Strategy -->
+  <script>
+    console.log('🔧 Loading Supabase library...');
+
+    // Define fallback function first
+    window.loadSupabaseFallback = function() {
+      console.log('🔄 Loading fallback Supabase CDN...');
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js';
+      script.onload = () => {
+        console.log('✅ Fallback Supabase script loaded');
+        window.supabaseLoadAttempted = true;
+      };
+      script.onerror = function() {
+        console.error('❌ Fallback CDN also failed');
+        // Try jsdelivr alternative
+        const script2 = document.createElement('script');
+        script2.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+        script2.onload = () => {
+          console.log('✅ Alternative CDN loaded');
+          window.supabaseLoadAttempted = true;
+        };
+        script2.onerror = () => {
+          console.error('❌ All CDNs failed');
+          setTimeout(showCDNError, 1000);
+        };
+        document.head.appendChild(script2);
+      };
+      document.head.appendChild(script);
+    };
+
+    window.showCDNError = function() {
+      if (document.body) {
+        document.body.innerHTML = `
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 2rem; font-family: Inter, sans-serif; background: #f8f9fa;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🌐</div>
+            <div style="background: white; color: #721c24; padding: 2rem; border-radius: 15px; max-width: 600px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+              <h2 style="margin: 0 0 1rem 0; color: #dc3545;">Network Connection Issue</h2>
+              <p style="margin: 0 0 1rem 0; color: #666;">Unable to load required database components. This might be due to:</p>
+              <ul style="text-align: left; color: #666; margin: 1rem 0;">
+                <li>Network connectivity issues</li>
+                <li>Corporate firewall restrictions</li>
+                <li>Ad-blocker blocking CDN resources</li>
+                <li>DNS resolution problems</li>
+              </ul>
+              <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin: 1rem 0; color: #1565c0;">
+                <strong>Troubleshooting:</strong><br>
+                1. Check your internet connection<br>
+                2. Disable ad-blockers temporarily<br>
+                3. Try a different network<br>
+                4. Contact your IT department if on corporate network
+              </div>
+              <button onclick="window.location.reload()" style="background: #dc3545; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; margin-top: 1rem; cursor: pointer; font-weight: 600;">
+                🔄 Try Again
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    };
+  </script>
+
+  <!-- Try primary CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"
+          onload="console.log('✅ Primary Supabase CDN loaded successfully'); window.supabaseLoadAttempted = true;"
+          onerror="console.warn('❌ Primary CDN failed, trying fallback...'); window.loadSupabaseFallback();"></script>
   <style>
     * {
         margin: 0;
@@ -1101,6 +1168,349 @@
         color: #666;
     }
 
+    /* NEW: Team Management Styles */
+    .management-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f0f0f0;
+        margin-bottom: 2rem;
+        display: none;
+    }
+
+    .management-section.active {
+        display: block;
+    }
+
+    .management-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .add-btn {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .btn-secondary {
+        background: #f8f9fa;
+        color: #666;
+        border: 1px solid #e9ecef;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: #e9ecef;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .team-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .team-member-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+
+    .team-member-card:hover {
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .team-member-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .team-member-info h4 {
+        margin: 0;
+        color: #333;
+        font-size: 1.2rem;
+    }
+
+    .team-member-info p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .team-member-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-small {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-edit {
+        background: #fbbf24;
+        color: white;
+        border: none;
+    }
+
+    .btn-delete {
+        background: #ef4444;
+        color: white;
+        border: none;
+    }
+
+    .btn-small:hover {
+        transform: translateY(-1px);
+    }
+
+    /* NEW: Product Management Styles */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .product-management-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .product-management-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .product-management-card.selected {
+        border-color: #22c55e;
+        background: #f0f9ff;
+    }
+
+    .product-toggle {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 25px;
+        background: #e9ecef;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .product-toggle.active {
+        background: #22c55e;
+    }
+
+    .product-toggle::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 21px;
+        height: 21px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .product-toggle.active::before {
+        transform: translateX(25px);
+    }
+
+    .product-info h4 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+        font-size: 1.1rem;
+    }
+
+    .product-info p {
+        margin: 0 0 0.5rem 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .product-price {
+        font-weight: 700;
+        color: #22c55e;
+        font-size: 1.1rem;
+    }
+
+    .product-category {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+
+    .product-search {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .product-search:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .product-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .selected-products-summary {
+        background: #f0f9ff;
+        border: 2px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-title {
+        font-weight: 700;
+        color: #0369a1;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .summary-stat {
+        text-align: center;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .summary-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0369a1;
+    }
+
+    .summary-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+
     /* Responsive Design */
     @media (max-width: 1200px) {
         .dashboard-container {
@@ -1148,6 +1558,14 @@
             margin: 0.5rem;
             max-height: 90vh;
         }
+
+        .product-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .product-filters {
+            justify-content: center;
+        }
     }
   </style>
 </head>
@@ -1180,6 +1598,18 @@
         <a href="#" class="nav-link" onclick="showTeamPerformance()">
           <span class="nav-icon">👥</span>
           <span>Team Performance</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showManageTeam()">
+          <span class="nav-icon">👤</span>
+          <span>Manage Team</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showManageProducts()">
+          <span class="nav-icon">🛍️</span>
+          <span>Manage Products</span>
         </a>
       </li>
       <li class="nav-item">
@@ -1235,8 +1665,88 @@
       </div>
     </div>
 
-    <!-- AI Business Advisor Section -->
-    <div class="ai-advisor-section">
+    <!-- NEW: Team Management Section -->
+    <div class="management-section" id="teamManagementSection">
+      <div class="management-header">
+        <h2 class="chart-title">Team Management</h2>
+        <button class="add-btn" onclick="showAddStylistForm()">
+          <span>➕</span>
+          <span>Add New Stylist</span>
+        </button>
+      </div>
+
+      <!-- Add Stylist Form -->
+      <div id="addStylistForm" style="display: none; background: #f8f9fa; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1.5rem 0; color: #333;">Add New Stylist</h3>
+        <div class="form-group">
+          <label for="stylistName">Stylist Name *</label>
+          <input type="text" id="stylistName" placeholder="Enter stylist's full name" required>
+        </div>
+        <div class="form-group">
+          <label for="stylistEmail">Email Address *</label>
+          <input type="email" id="stylistEmail" placeholder="Enter email for app login" required>
+        </div>
+        <div class="form-group">
+          <label for="stylistPhone">Phone Number</label>
+          <input type="tel" id="stylistPhone" placeholder="Optional - for contact purposes">
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" onclick="hideAddStylistForm()">Cancel</button>
+          <button class="btn-primary" onclick="createNewStylist()">Create Stylist</button>
+        </div>
+      </div>
+
+      <!-- Current Team List -->
+      <div id="teamList" class="team-list">
+        <div style="text-align: center; padding: 3rem; color: #666;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+          <p>Loading team members...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW: Product Management Section -->
+    <div class="management-section" id="productManagementSection">
+      <div class="management-header">
+        <h2 class="chart-title">Product Management</h2>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <span style="color: #666; font-size: 0.9rem;">Manage products available to your clients</span>
+        </div>
+      </div>
+
+      <!-- Selected Products Summary -->
+      <div class="selected-products-summary" id="selectedProductsSummary" style="display: none;">
+        <div class="summary-title">
+          <span>🛍️</span>
+          <span>Your Selected Products</span>
+        </div>
+        <div class="summary-grid" id="summaryGrid">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Product Search and Filters -->
+      <input type="text" class="product-search" id="productSearch" placeholder="Search products by name or brand...">
+
+      <div class="product-filters" id="productFilters">
+        <button class="filter-btn active" data-category="all">All Categories</button>
+        <button class="filter-btn" data-category="Hair Care">Hair Care</button>
+        <button class="filter-btn" data-category="Styling">Styling</button>
+        <button class="filter-btn" data-category="Color">Color</button>
+        <button class="filter-btn" data-category="Treatment">Treatment</button>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="productsGrid" class="product-grid">
+        <div style="text-align: center; padding: 3rem; color: #666; grid-column: 1 / -1;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🛍️</div>
+          <p>Loading available products...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXISTING: AI Business Advisor Section -->
+    <div class="ai-advisor-section" id="dashboardSection">
       <div class="ai-header">
         <div class="ai-title-section">
           <div class="ai-icon">✨</div>
@@ -1311,7 +1821,7 @@
     </div>
 
     <!-- Key Metrics Grid -->
-    <div class="metrics-grid">
+    <div class="metrics-grid" id="metricsSection">
       <div class="metric-card loading-stats" onclick="openDrillDown('stylists')">
         <div class="metric-header">
           <div class="metric-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">👥</div>
@@ -1368,7 +1878,7 @@
     </div>
 
     <!-- Charts Section -->
-    <div class="charts-section">
+    <div class="charts-section" id="chartsSection">
       <div class="chart-container">
         <div class="chart-header">
           <h3 class="chart-title">Team Activity Trends</h3>
@@ -1400,7 +1910,7 @@
     </div>
 
     <!-- Team Performance Table -->
-    <div class="performance-table">
+    <div class="performance-table" id="performanceSection">
       <div class="table-header">
         <h3 class="chart-title">Team Performance Leaderboard</h3>
         <div class="chart-controls">
@@ -1439,12 +1949,78 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // Supabase Configuration
+  // Wait for Supabase to be available before running any code
+  function waitForSupabaseLibrary() {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const maxAttempts = 30; // Increased attempts
+
+      const checkLibrary = () => {
+        attempts++;
+
+        // Check multiple possible locations for Supabase
+        const hasWindow = typeof window !== 'undefined';
+        const hasSupabase = typeof window.supabase !== 'undefined';
+        const hasCreateClient = hasSupabase && typeof window.supabase.createClient === 'function';
+        const hasGlobalSupabase = typeof window.Supabase !== 'undefined';
+        const hasGlobalCreateClient = hasGlobalSupabase && typeof window.Supabase.createClient === 'function';
+
+        console.log(`🔍 Library check ${attempts}/${maxAttempts}:`, {
+          hasWindow,
+          hasSupabase,
+          hasCreateClient,
+          hasGlobalSupabase,
+          hasGlobalCreateClient,
+          windowSupabase: typeof window.supabase,
+          windowSupabaseGlobal: typeof window.Supabase,
+          loadAttempted: window.supabaseLoadAttempted
+        });
+
+        // Try different ways Supabase might be exposed
+        if (hasCreateClient) {
+          console.log('✅ Supabase found at window.supabase');
+          resolve();
+        } else if (hasGlobalCreateClient) {
+          console.log('✅ Supabase found at window.Supabase, mapping to window.supabase');
+          window.supabase = window.Supabase;
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          console.error('❌ Supabase library failed to load after all attempts');
+          console.error('Final state:', {
+            windowKeys: Object.keys(window).filter(k => k.toLowerCase().includes('supabase')),
+            scripts: Array.from(document.scripts).map(s => s.src).filter(src => src.includes('supabase')),
+            loadAttempted: window.supabaseLoadAttempted
+          });
+          reject(new Error('Supabase library not available'));
+        } else {
+          setTimeout(checkLibrary, 300); // Check every 300ms
+        }
+      };
+
+      // Start checking immediately
+      checkLibrary();
+    });
+  }
+
+  // Supabase Configuration with Error Handling
   const supabaseUrl = 'https://mffqaqvjylkotkgvytro.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZnFhcXZqeWxrb3RrZ3Z5dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTI5MzYsImV4cCI6MjA2MTY4ODkzNn0.oUlS-JS1G9OHjwv89xZY_QRqwsoI-GE8c-ZE_U2TjDc';
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  let supabase = null;
+
+  // Initialize Supabase after library loads
+  async function initializeSupabase() {
+    try {
+      await waitForSupabaseLibrary();
+      supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      console.log('✅ Supabase client initialized successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to initialize Supabase:', error);
+      return false;
+    }
+  }
 
   // Global variables
   let currentUser = null;
@@ -1468,6 +2044,11 @@
 
   // Store analytics data globally for AI context
   let currentAnalyticsData = null;
+
+  // NEW: Management state variables
+  let allProducts = [];
+  let selectedProducts = new Set();
+  let currentTeamMembers = [];
 
   // UPDATED: Enhanced analytics calculation with proper product integration
   async function calculateRealTimeAnalytics(salonId) {
@@ -1665,6 +2246,9 @@
         };
       });
 
+      // NEW: Store team data for management section
+      currentTeamMembers = stylistsData;
+
       const summary = {
         totalStylists: stylistsData.length,
         totalClients: stylistsData.reduce((sum, s) => sum + s.totalClients, 0),
@@ -1677,6 +2261,7 @@
 
       // Update UI
       updateTeamPerformanceTable();
+      updateTeamManagementList(); // NEW: Update team management
       if (currentAnalyticsData) {
         displayAnalytics(currentAnalyticsData);
       }
@@ -1690,6 +2275,488 @@
     } catch (error) {
       console.error('❌ Enhanced stylist loading failed:', error);
     }
+  }
+
+  // NEW: Team Management Functions
+  function showAddStylistForm() {
+    document.getElementById('addStylistForm').style.display = 'block';
+    document.getElementById('stylistName').focus();
+  }
+
+  function hideAddStylistForm() {
+    document.getElementById('addStylistForm').style.display = 'none';
+    // Clear form
+    document.getElementById('stylistName').value = '';
+    document.getElementById('stylistEmail').value = '';
+    document.getElementById('stylistPhone').value = '';
+  }
+
+  async function createNewStylist() {
+    const name = document.getElementById('stylistName').value.trim();
+    const email = document.getElementById('stylistEmail').value.trim();
+    const phone = document.getElementById('stylistPhone').value.trim();
+
+    if (!name || !email) {
+      alert('Please fill in the required fields (Name and Email).');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    // Check if Supabase is available
+    if (!supabase) {
+      alert('Database connection not available. Please refresh the page and try again.');
+      return;
+    }
+
+    try {
+      console.log('Creating new stylist:', { name, email });
+
+      // Step 1: Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: generateRandomPassword(),
+        email_confirm: true,
+        user_metadata: {
+          stylist_name: name,
+          salon_id: salonData.salon_id,
+          role: 'stylist'
+        }
+      });
+
+      if (authError) {
+        console.error('Auth user creation failed:', authError);
+        throw new Error(`Failed to create user account: ${authError.message}`);
+      }
+
+      console.log('Auth user created:', authData.user.id);
+
+      // Step 2: Create stylist record
+      const { data: stylistData, error: stylistError } = await supabase
+        .from('stylists')
+        .insert({
+          stylist_name: name,
+          email: email,
+          phone: phone || null,
+          salon_id: salonData.salon_id,
+          user_id: authData.user.id // Link to auth user
+        })
+        .select()
+        .single();
+
+      if (stylistError) {
+        console.error('Stylist creation failed:', stylistError);
+        throw new Error(`Failed to create stylist record: ${stylistError.message}`);
+      }
+
+      console.log('Stylist created successfully:', stylistData);
+
+      // Show success message
+      alert(`✅ Stylist created successfully!\n\nCredentials:\nEmail: ${email}\nPassword: (auto-generated)\n\nThe stylist can now use these credentials in the PostMyStyle mobile app.`);
+
+      // Hide form and refresh data
+      hideAddStylistForm();
+      await loadStylistsData(salonData.salon_id);
+
+    } catch (error) {
+      console.error('Error creating stylist:', error);
+      alert(`❌ Error creating stylist: ${error.message}`);
+    }
+  }
+
+  function generateRandomPassword() {
+    // Generate a secure random password
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  function updateTeamManagementList() {
+    const teamList = document.getElementById('teamList');
+
+    if (!currentTeamMembers || currentTeamMembers.length === 0) {
+      teamList.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: #666;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+          <p>No team members found. Add your first stylist to get started!</p>
+        </div>
+      `;
+      return;
+    }
+
+    teamList.innerHTML = currentTeamMembers.map(member => `
+      <div class="team-member-card">
+        <div class="team-member-header">
+          <div class="team-member-info">
+            <h4>${member.stylist_name}</h4>
+            <p>${member.email || 'No email'} ${member.phone ? `• ${member.phone}` : ''}</p>
+            <p style="color: #22c55e; font-size: 0.8rem; margin-top: 0.5rem;">
+              ${member.totalPosts} posts • ${member.totalViews} views • ${member.totalClients} clients
+            </p>
+          </div>
+          <div class="team-member-actions">
+            <button class="btn-small btn-edit" onclick="editStylist('${member.id}')">Edit</button>
+            <button class="btn-small btn-delete" onclick="deleteStylist('${member.id}', '${member.stylist_name}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function editStylist(stylistId) {
+    // Find the stylist
+    const stylist = currentTeamMembers.find(s => s.id === stylistId);
+    if (!stylist) return;
+
+    // For now, show basic edit options
+    const newName = prompt('Edit stylist name:', stylist.stylist_name);
+    const newPhone = prompt('Edit phone number:', stylist.phone || '');
+
+    if (newName && newName !== stylist.stylist_name) {
+      updateStylist(stylistId, { stylist_name: newName, phone: newPhone });
+    }
+  }
+
+  async function updateStylist(stylistId, updates) {
+    try {
+      const { error } = await supabase
+        .from('stylists')
+        .update(updates)
+        .eq('id', stylistId);
+
+      if (error) throw error;
+
+      alert('Stylist updated successfully!');
+      await loadStylistsData(salonData.salon_id);
+    } catch (error) {
+      console.error('Error updating stylist:', error);
+      alert(`Error updating stylist: ${error.message}`);
+    }
+  }
+
+  async function deleteStylist(stylistId, stylistName) {
+    const confirmed = confirm(`Are you sure you want to delete ${stylistName}?\n\nThis will:\n- Remove them from your team\n- Disable their app access\n- Keep their historical data for analytics\n\nThis action cannot be undone.`);
+
+    if (!confirmed) return;
+
+    try {
+      // Note: We should soft delete to preserve analytics data
+      const { error } = await supabase
+        .from('stylists')
+        .update({ status: 'inactive' })
+        .eq('id', stylistId);
+
+      if (error) throw error;
+
+      alert('Stylist removed successfully!');
+      await loadStylistsData(salonData.salon_id);
+    } catch (error) {
+      console.error('Error deleting stylist:', error);
+      alert(`Error removing stylist: ${error.message}`);
+    }
+  }
+
+  // NEW: Product Management Functions
+  async function loadAllProducts() {
+    try {
+      console.log('Loading all products...');
+
+      const { data: products, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_available', true)
+        .order('brand', { ascending: true });
+
+      if (error) throw error;
+
+      allProducts = products || [];
+      console.log(`Loaded ${allProducts.length} products`);
+
+      // Load salon's current products
+      await loadSalonProducts();
+
+      // Render products
+      renderProductsGrid();
+      setupProductFilters();
+
+    } catch (error) {
+      console.error('Error loading products:', error);
+      document.getElementById('productsGrid').innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: #ef4444; grid-column: 1 / -1;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+          <p>Error loading products. Please try again.</p>
+        </div>
+      `;
+    }
+  }
+
+  async function loadSalonProducts() {
+    try {
+      const { data: salonProducts, error } = await supabase
+        .from('salon_products')
+        .select('product_id')
+        .eq('salon_id', salonData.salon_id)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      selectedProducts = new Set(salonProducts?.map(sp => sp.product_id) || []);
+      console.log(`Salon has ${selectedProducts.size} selected products`);
+
+      updateSelectedProductsSummary();
+
+    } catch (error) {
+      console.error('Error loading salon products:', error);
+    }
+  }
+
+  function renderProductsGrid() {
+    const grid = document.getElementById('productsGrid');
+
+    if (allProducts.length === 0) {
+      grid.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: #666; grid-column: 1 / -1;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+          <p>No products available at this time.</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = allProducts.map(product => {
+      const isSelected = selectedProducts.has(product.id);
+      return `
+        <div class="product-management-card ${isSelected ? 'selected' : ''}" data-product-id="${product.id}">
+          <div class="product-toggle ${isSelected ? 'active' : ''}" onclick="toggleProduct('${product.id}')"></div>
+
+          <div class="product-info">
+            <h4>${product.brand} ${product.product_name}</h4>
+            <p>${product.category}</p>
+            ${product.amazon_price ? `<div class="product-price">$${product.amazon_price}</div>` : ''}
+            ${product.amazon_rating ? `<p style="color: #f59e0b;">⭐ ${product.amazon_rating} (${product.amazon_review_count || 0} reviews)</p>` : ''}
+            <div class="product-category">${product.category}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function toggleProduct(productId) {
+    try {
+      const isCurrentlySelected = selectedProducts.has(productId);
+
+      if (isCurrentlySelected) {
+        // Remove product
+        const { error } = await supabase
+          .from('salon_products')
+          .delete()
+          .eq('salon_id', salonData.salon_id)
+          .eq('product_id', productId);
+
+        if (error) throw error;
+
+        selectedProducts.delete(productId);
+        console.log('Product removed from salon');
+      } else {
+        // Add product
+        const { error } = await supabase
+          .from('salon_products')
+          .insert({
+            salon_id: salonData.salon_id,
+            product_id: productId,
+            is_active: true
+          });
+
+        if (error) throw error;
+
+        selectedProducts.add(productId);
+        console.log('Product added to salon');
+      }
+
+      // Update UI
+      const card = document.querySelector(`[data-product-id="${productId}"]`);
+      const toggle = card.querySelector('.product-toggle');
+
+      if (isCurrentlySelected) {
+        card.classList.remove('selected');
+        toggle.classList.remove('active');
+      } else {
+        card.classList.add('selected');
+        toggle.classList.add('active');
+      }
+
+      updateSelectedProductsSummary();
+
+      // Refresh analytics to show updated product data
+      if (currentAnalyticsData) {
+        await loadSalonAnalytics(salonData.salon_id);
+      }
+
+    } catch (error) {
+      console.error('Error toggling product:', error);
+      alert(`Error updating product: ${error.message}`);
+    }
+  }
+
+  function updateSelectedProductsSummary() {
+    const summary = document.getElementById('selectedProductsSummary');
+    const grid = document.getElementById('summaryGrid');
+
+    if (selectedProducts.size === 0) {
+      summary.style.display = 'none';
+      return;
+    }
+
+    summary.style.display = 'block';
+
+    const selectedProductsList = allProducts.filter(p => selectedProducts.has(p.id));
+    const categories = [...new Set(selectedProductsList.map(p => p.category))];
+    const avgPrice = selectedProductsList.filter(p => p.amazon_price).reduce((sum, p) => sum + parseFloat(p.amazon_price), 0) / selectedProductsList.filter(p => p.amazon_price).length || 0;
+
+    grid.innerHTML = `
+      <div class="summary-stat">
+        <div class="summary-number">${selectedProducts.size}</div>
+        <div class="summary-label">Products Selected</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-number">${categories.length}</div>
+        <div class="summary-label">Categories</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-number">$${avgPrice > 0 ? avgPrice.toFixed(0) : '—'}</div>
+        <div class="summary-label">Avg Price</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-number">${currentAnalyticsData?.total_product_clicks || 0}</div>
+        <div class="summary-label">Total Clicks</div>
+      </div>
+    `;
+  }
+
+  function setupProductFilters() {
+    // Setup category filters
+    const categories = [...new Set(allProducts.map(p => p.category))];
+    const filtersContainer = document.getElementById('productFilters');
+
+    filtersContainer.innerHTML = `
+      <button class="filter-btn active" data-category="all">All Categories</button>
+      ${categories.map(category =>
+        `<button class="filter-btn" data-category="${category}">${category}</button>`
+      ).join('')}
+    `;
+
+    // Add filter event listeners
+    filtersContainer.addEventListener('click', (e) => {
+      if (e.target.classList.contains('filter-btn')) {
+        // Update active filter
+        filtersContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+
+        // Filter products
+        filterProducts(e.target.dataset.category);
+      }
+    });
+
+    // Setup search
+    document.getElementById('productSearch').addEventListener('input', (e) => {
+      searchProducts(e.target.value);
+    });
+  }
+
+  function filterProducts(category) {
+    const cards = document.querySelectorAll('.product-management-card');
+
+    cards.forEach(card => {
+      const productId = card.dataset.productId;
+      const product = allProducts.find(p => p.id === productId);
+
+      if (category === 'all' || product.category === category) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function searchProducts(searchTerm) {
+    const cards = document.querySelectorAll('.product-management-card');
+    const term = searchTerm.toLowerCase();
+
+    cards.forEach(card => {
+      const productId = card.dataset.productId;
+      const product = allProducts.find(p => p.id === productId);
+      const searchText = `${product.brand} ${product.product_name}`.toLowerCase();
+
+      if (searchText.includes(term)) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // NEW: Navigation functions for management sections
+  function showManageTeam() {
+    hideAllSections();
+    setActiveNavItem('Manage Team');
+    document.getElementById('teamManagementSection').classList.add('active');
+    updateTeamManagementList();
+  }
+
+  function showManageProducts() {
+    hideAllSections();
+    setActiveNavItem('Manage Products');
+    document.getElementById('productManagementSection').classList.add('active');
+    if (allProducts.length === 0) {
+      loadAllProducts();
+    }
+  }
+
+  function hideAllSections() {
+    // Hide all main sections
+    const sections = [
+      'dashboardSection',
+      'metricsSection',
+      'chartsSection',
+      'performanceSection',
+      'teamManagementSection',
+      'productManagementSection'
+    ];
+
+    sections.forEach(sectionId => {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        if (section.classList.contains('management-section')) {
+          section.classList.remove('active');
+        } else {
+          section.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  function showDashboardSections() {
+    const sections = [
+      'dashboardSection',
+      'metricsSection',
+      'chartsSection',
+      'performanceSection'
+    ];
+
+    sections.forEach(sectionId => {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.style.display = 'block';
+      }
+    });
   }
 
   // UPDATED: Enhanced product drill-down with real salon products and interactions
@@ -1830,7 +2897,7 @@
     return productsHTML;
   }
 
-  // All other functions remain exactly the same as in the original code...
+  // All other existing functions remain exactly the same...
   // [The rest of the JavaScript code remains unchanged from the original]
 
   // UNIFIED AI SERVICE FUNCTION - CONTEXT AWARE WITH ENHANCED ERROR HANDLING
@@ -1925,6 +2992,15 @@
       }
 
       try {
+          console.log('🚀 Initializing dashboard...');
+
+          // Initialize Supabase
+          const supabaseReady = await initializeSupabase();
+          if (!supabaseReady) {
+            showErrorState('Database connection failed. Please check your internet connection and refresh the page.');
+            return;
+          }
+
           // Get current user
           const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -2895,15 +3971,61 @@ Try the quick action buttons above for specific business strategies, or contact 
       }
   }
 
-  // Show error state
+  // Show error state with manual options
   function showErrorState(message) {
-      const metricsGrid = document.querySelector('.metrics-grid');
-      metricsGrid.innerHTML = `
-          <div class="error-message" style="grid-column: 1 / -1;">
-              <strong>⚠️ ${message}</strong><br>
-              <small>Try refreshing the page or contact support if the issue persists.</small>
-          </div>
-      `;
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        mainContent.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+                <div style="background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; padding: 2rem; border-radius: 15px; max-width: 600px; border-left: 4px solid #dc3545;">
+                    <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem;">Dashboard Connection Error</h2>
+                    <p style="margin: 0 0 1rem 0; font-size: 1.1rem;"><strong>${message}</strong></p>
+                    <p style="margin: 0 0 1rem 0; font-size: 0.9rem;">The dashboard requires a connection to our database service.</p>
+
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <strong style="color: #1565c0;">Troubleshooting Steps:</strong>
+                        <ul style="text-align: left; margin: 0.5rem 0; color: #333;">
+                            <li>Check your internet connection</li>
+                            <li>Disable any ad-blockers temporarily</li>
+                            <li>If on a corporate network, contact IT support</li>
+                            <li>Try refreshing the page</li>
+                        </ul>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+                        <button onclick="window.location.reload()" style="background: #dc3545; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            🔄 Reload Page
+                        </button>
+                        <button onclick="window.debugDashboard.retryInitialization()" style="background: #0369a1; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            🔄 Retry Connection
+                        </button>
+                        <button onclick="showOfflineMode()" style="background: #f59e0b; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            📱 Contact Support
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+      } else {
+        // Fallback if main-content doesn't exist yet
+        document.body.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 2rem; font-family: Inter, sans-serif;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+                <div style="background: #f8d7da; color: #721c24; padding: 2rem; border-radius: 15px; max-width: 600px;">
+                    <h2 style="margin: 0 0 1rem 0;">Dashboard Initialization Failed</h2>
+                    <p style="margin: 0 0 1rem 0;"><strong>${message}</strong></p>
+                    <button onclick="window.location.reload()" style="background: #dc3545; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; margin-top: 1rem; cursor: pointer;">
+                        🔄 Reload Page
+                    </button>
+                </div>
+            </div>
+        `;
+      }
+  }
+
+  function showOfflineMode() {
+      alert('📱 For immediate support, please contact:\n\nEmail: support@postmystyle.ai\nPhone: [Your support number]\n\nInclude this error message: "Dashboard connection failed - Supabase library not loading"');
   }
 
   // Logout function
@@ -2916,11 +4038,14 @@ Try the quick action buttons above for specific business strategies, or contact 
       }
 
       try {
-          // Sign out from Supabase
-          const { error } = await supabase.auth.signOut();
+          // Check if Supabase is available
+          if (supabase) {
+            // Sign out from Supabase
+            const { error } = await supabase.auth.signOut();
 
-          if (error) {
-              console.error('Logout error:', error);
+            if (error) {
+                console.error('Logout error:', error);
+            }
           }
       } catch (error) {
           console.error('Logout error:', error);
@@ -3296,18 +4421,23 @@ Try the quick action buttons above for specific business strategies, or contact 
 
   // Sidebar navigation functions
   function showDashboard() {
+      hideAllSections();
+      showDashboardSections();
       setActiveNavItem('Dashboard');
-      // Dashboard is already visible - could scroll to top or refresh
       window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function showTeamPerformance() {
+      hideAllSections();
+      showDashboardSections();
       setActiveNavItem('Team Performance');
       // Scroll to team performance table
       document.querySelector('.performance-table').scrollIntoView({ behavior: 'smooth' });
   }
 
   function showSocialAnalytics() {
+      hideAllSections();
+      showDashboardSections();
       setActiveNavItem('Social Analytics');
       // Scroll to metrics grid (social analytics cards)
       document.querySelector('.metrics-grid').scrollIntoView({ behavior: 'smooth' });
@@ -3562,18 +4692,100 @@ Try the quick action buttons above for specific business strategies, or contact 
 
   // Initialize dashboard when page loads - single initialization
   if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', async function() {
           console.log('🚀 PostMyStyle.ai Dashboard initializing with ENHANCED PRODUCT INTEGRATION...');
-          loadDashboard();
+          try {
+            await loadDashboard();
+          } catch (error) {
+            console.error('❌ Dashboard initialization failed:', error);
+            showErrorState('Failed to initialize dashboard. Please refresh the page.');
+          }
       });
   } else {
       // DOM already loaded
       console.log('🚀 PostMyStyle.ai Dashboard initializing with ENHANCED PRODUCT INTEGRATION (DOM ready)...');
-      loadDashboard();
+      (async () => {
+        try {
+          await loadDashboard();
+        } catch (error) {
+          console.error('❌ Dashboard initialization failed:', error);
+          showErrorState('Failed to initialize dashboard. Please refresh the page.');
+        }
+      })();
   }
 
   // Debug helper - add to global scope for console testing
   window.debugDashboard = {
+      testSupabaseConnection: async function() {
+          console.log('🧪 Testing Supabase connection...');
+          if (!supabase) {
+              console.log('❌ Supabase not initialized');
+              return false;
+          }
+
+          try {
+              const { data, error } = await supabase.auth.getSession();
+              console.log('✅ Supabase connection successful', { hasData: !!data, error });
+              return true;
+          } catch (err) {
+              console.error('❌ Supabase connection failed:', err);
+              return false;
+          }
+      },
+
+      debugSupabaseLoading: function() {
+          console.log('🔍 SUPABASE LOADING DEBUG:');
+          console.log('  • Scripts in head:', Array.from(document.head.querySelectorAll('script')).map(s => s.src));
+          console.log('  • All scripts:', Array.from(document.scripts).map(s => ({ src: s.src, loaded: s.readyState })));
+          console.log('  • Window keys (all):', Object.keys(window).filter(k => k.length < 20).sort());
+          console.log('  • Window keys with "sup":', Object.keys(window).filter(k => k.toLowerCase().includes('sup')));
+          console.log('  • Window keys with "base":', Object.keys(window).filter(k => k.toLowerCase().includes('base')));
+          console.log('  • window.supabase:', window.supabase);
+          console.log('  • window.Supabase:', window.Supabase);
+          console.log('  • typeof window.supabase:', typeof window.supabase);
+          console.log('  • typeof window.Supabase:', typeof window.Supabase);
+          console.log('  • Load attempted flag:', window.supabaseLoadAttempted);
+
+          // Try to find any createClient function
+          const potentialClients = [];
+          for (let key in window) {
+              if (window[key] && typeof window[key] === 'object' && window[key].createClient) {
+                  potentialClients.push(key);
+              }
+          }
+          console.log('  • Objects with createClient:', potentialClients);
+
+          return {
+              scriptsLoaded: Array.from(document.scripts).filter(s => s.src.includes('supabase')).length,
+              hasSupabase: !!window.supabase,
+              hasSupabaseGlobal: !!window.Supabase,
+              potentialClients: potentialClients
+          };
+      },
+
+      manualSupabaseSetup: function() {
+          console.log('🔧 Attempting manual Supabase setup...');
+
+          // Try different possible locations
+          if (window.Supabase && window.Supabase.createClient) {
+              console.log('Found Supabase at window.Supabase, mapping to window.supabase');
+              window.supabase = window.Supabase;
+              return this.retryInitialization();
+          }
+
+          // Check for any object with createClient
+          for (let key in window) {
+              if (window[key] && typeof window[key] === 'object' && window[key].createClient) {
+                  console.log(`Found createClient at window.${key}, trying to use it`);
+                  window.supabase = window[key];
+                  return this.retryInitialization();
+              }
+          }
+
+          console.log('❌ No Supabase instance found anywhere');
+          return false;
+      },
+
       testEnhancedAnalytics: async function() {
           if (!salonData) {
               console.log('No salon data available');
@@ -3588,6 +4800,7 @@ Try the quick action buttons above for specific business strategies, or contact 
 
       showCurrentData: function() {
           console.log('📊 Current dashboard state:', {
+              supabaseReady: !!supabase,
               salonData: salonData,
               currentAnalyticsData: currentAnalyticsData,
               stylistsData: stylistsData?.length ? `${stylistsData.length} stylists loaded` : 'No stylists data',
@@ -3608,11 +4821,45 @@ Try the quick action buttons above for specific business strategies, or contact 
           const productHTML = generateProductDrillDown();
           console.log('Generated product HTML length:', productHTML.length);
           return productHTML;
+      },
+
+      retryInitialization: async function() {
+          console.log('🔄 Retrying dashboard initialization...');
+          isDashboardLoaded = false;
+          try {
+              await loadDashboard();
+              console.log('✅ Retry successful!');
+          } catch (error) {
+              console.error('❌ Retry failed:', error);
+          }
       }
   };
 
   console.log('✅ ENHANCED PRODUCT INTEGRATION DASHBOARD LOADED');
-  console.log('💡 Available debug commands: window.debugDashboard.testEnhancedAnalytics(), window.debugDashboard.showCurrentData(), window.debugDashboard.forceRefresh(), window.debugDashboard.testProductDrillDown()');
+  console.log('🔍 Checking library availability...');
+  console.log('  • Chart.js:', typeof Chart !== 'undefined' ? '✅ Ready' : '❌ Missing');
+  console.log('  • Supabase (window.supabase):', typeof window.supabase !== 'undefined' ? '✅ Ready' : '⏳ Loading...');
+  console.log('  • Supabase (window.Supabase):', typeof window.Supabase !== 'undefined' ? '✅ Available' : '❌ Not found');
+  console.log('  • Window keys containing "supabase":', Object.keys(window).filter(k => k.toLowerCase().includes('supabase')));
+
+  // Try to manually check for Supabase in different forms
+  setTimeout(() => {
+      console.log('🔍 Delayed check after 2 seconds:');
+      console.log('  • window.supabase:', typeof window.supabase);
+      console.log('  • window.Supabase:', typeof window.Supabase);
+      console.log('  • window.createClient:', typeof window.createClient);
+      console.log('  • All window keys with "sup":', Object.keys(window).filter(k => k.toLowerCase().includes('sup')));
+  }, 2000);
+
+  console.log('💡 Available debug commands:');
+  console.log('  • window.debugDashboard.debugSupabaseLoading() - Detailed Supabase debug info');
+  console.log('  • window.debugDashboard.manualSupabaseSetup() - Try manual Supabase detection');
+  console.log('  • window.debugDashboard.testSupabaseConnection() - Test connection');
+  console.log('  • window.debugDashboard.retryInitialization() - Retry dashboard init');
+  console.log('  • window.debugDashboard.showCurrentData() - Show current state');
+  console.log('  • window.debugDashboard.testEnhancedAnalytics() - Test analytics');
+  console.log('  • window.debugDashboard.forceRefresh() - Force refresh data');
+  console.log('  • window.debugDashboard.testProductDrillDown() - Test product features');
 
 </script>
 </body>
