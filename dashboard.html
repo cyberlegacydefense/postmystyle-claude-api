@@ -1342,45 +1342,113 @@
         transform: translateY(-1px);
     }
 
-    /* NEW: Product Management Styles */
+    /* NEW: Product Management Styles - Compact Version */
     .product-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
         margin-top: 2rem;
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        background: #f8f9fa;
     }
 
     .product-management-card {
         background: white;
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
         transition: all 0.3s ease;
         position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 80px;
     }
 
     .product-management-card:hover {
         border-color: #667eea;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
     }
 
     .product-management-card.selected {
         border-color: #22c55e;
         background: #f0f9ff;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+    }
+
+    .product-image-container {
+        width: 50px;
+        height: 50px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1px solid #e2e8f0;
+    }
+
+    .product-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-image-placeholder {
+        color: #94a3b8;
+        font-size: 1.2rem;
+        text-align: center;
+    }
+
+    .product-info-compact {
+        flex: 1;
+        min-width: 0; /* Allows text to truncate */
+    }
+
+    .product-info-compact h4 {
+        margin: 0 0 0.25rem 0;
+        color: #1f2937;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.2;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-info-compact .product-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+
+    .product-info-compact .product-price {
+        font-weight: 600;
+        color: #059669;
+        font-size: 0.85rem;
     }
 
     .product-toggle {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        width: 50px;
-        height: 25px;
-        background: #e9ecef;
-        border-radius: 25px;
+        position: static;
+        width: 40px;
+        height: 20px;
+        background: #e5e7eb;
+        border-radius: 20px;
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
+        flex-shrink: 0;
+        margin-left: auto;
     }
 
     .product-toggle.active {
@@ -1392,46 +1460,37 @@
         position: absolute;
         top: 2px;
         left: 2px;
-        width: 21px;
-        height: 21px;
+        width: 16px;
+        height: 16px;
         background: white;
         border-radius: 50%;
         transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .product-toggle.active::before {
-        transform: translateX(25px);
+        transform: translateX(20px);
     }
 
-    .product-info h4 {
-        margin: 0 0 0.5rem 0;
-        color: #333;
-        font-size: 1.1rem;
-    }
-
-    .product-info p {
-        margin: 0 0 0.5rem 0;
-        color: #666;
-        font-size: 0.9rem;
-    }
-
-    .product-price {
-        font-weight: 700;
-        color: #22c55e;
-        font-size: 1.1rem;
-    }
-
-    .product-category {
+    .product-category-badge {
         background: #e0f2fe;
         color: #0369a1;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: inline-block;
-        margin-top: 0.5rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        white-space: nowrap;
     }
 
+    .product-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: #f59e0b;
+    }
+
+    /* Search and filter improvements */
     .product-search {
         width: 100%;
         padding: 0.75rem;
@@ -1439,34 +1498,68 @@
         border-radius: 8px;
         font-size: 1rem;
         margin-bottom: 1rem;
+        background: white;
     }
 
     .product-search:focus {
         outline: none;
         border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
     .product-filters {
         display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
         flex-wrap: wrap;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
     }
 
     .filter-btn {
         background: #f8f9fa;
         border: 1px solid #e9ecef;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
+        padding: 0.4rem 0.8rem;
+        border-radius: 16px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         transition: all 0.3s ease;
+        white-space: nowrap;
     }
 
     .filter-btn.active {
         background: #667eea;
         color: white;
         border-color: #667eea;
+        transform: translateY(-1px);
+    }
+
+    .filter-btn:hover:not(.active) {
+        background: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .product-stats-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .products-count {
+        color: #6b7280;
+    }
+
+    .selected-count {
+        color: #059669;
+        font-weight: 600;
     }
 
     .selected-products-summary {
@@ -2317,10 +2410,13 @@
     try {
       console.log('Creating new stylist:', { name, email });
 
+      // Generate a readable password that the admin can easily share
+      const tempPassword = generateReadablePassword();
+
       // Step 1: Create user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: email,
-        password: generateRandomPassword(),
+        password: tempPassword,
         email_confirm: true,
         user_metadata: {
           stylist_name: name,
@@ -2356,8 +2452,8 @@
 
       console.log('Stylist created successfully:', stylistData);
 
-      // Show success message
-      alert(`✅ Stylist created successfully!\n\nCredentials:\nEmail: ${email}\nPassword: (auto-generated)\n\nThe stylist can now use these credentials in the PostMyStyle mobile app.`);
+      // Show success message with password clearly displayed
+      showStylistCreatedModal(name, email, tempPassword);
 
       // Hide form and refresh data
       hideAddStylistForm();
@@ -2369,14 +2465,112 @@
     }
   }
 
-  function generateRandomPassword() {
-    // Generate a secure random password
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
+  function generateReadablePassword() {
+    // Generate a password that's easy to communicate: 3 words + 2 numbers
+    const words = ['Salon', 'Style', 'Hair', 'Beauty', 'Shine', 'Glow', 'Trim', 'Color', 'Wave', 'Curl'];
+    const word1 = words[Math.floor(Math.random() * words.length)];
+    const word2 = words[Math.floor(Math.random() * words.length)];
+    const numbers = Math.floor(Math.random() * 99) + 10; // 10-99
+
+    return `${word1}${word2}${numbers}`;
+  }
+
+  function showStylistCreatedModal(name, email, password) {
+    const modal = document.getElementById('drillDownModal');
+    const title = document.getElementById('modalTitle');
+    const content = document.getElementById('modalContent');
+
+    title.textContent = '✅ Stylist Created Successfully';
+    content.innerHTML = `
+      <div style="text-align: center; padding: 2rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
+
+        <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+          <h3 style="margin: 0 0 1rem 0; color: #0369a1;">New Stylist Account Created</h3>
+          <div style="text-align: left; background: white; padding: 1.5rem; border-radius: 8px; margin: 1rem 0;">
+            <div style="margin-bottom: 1rem;">
+              <strong style="color: #374151;">Name:</strong>
+              <span style="color: #059669; font-weight: 600;">${name}</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <strong style="color: #374151;">Email:</strong>
+              <span style="color: #059669; font-weight: 600;">${email}</span>
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <strong style="color: #374151;">Temporary Password:</strong>
+              <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                <code style="font-size: 1.2rem; font-weight: bold; color: #92400e; letter-spacing: 1px;">${password}</code>
+                <button onclick="copyToClipboard('${password}')" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; margin-left: 1rem; cursor: pointer; font-size: 0.8rem;">
+                  📋 Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #e0f2fe; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; text-align: left;">
+          <h4 style="margin: 0 0 1rem 0; color: #0369a1;">📱 Next Steps:</h4>
+          <ol style="margin: 0; color: #374151; line-height: 1.6;">
+            <li><strong>Share credentials</strong> with ${name} (email/text/in-person)</li>
+            <li><strong>Download PostMyStyle app</strong> from App Store/Google Play</li>
+            <li><strong>Log in</strong> using the email and temporary password above</li>
+            <li><strong>Change password</strong> on first login (recommended)</li>
+            <li><strong>Start creating posts</strong> for clients!</li>
+          </ol>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <button onclick="copyCredentials('${name}', '${email}', '${password}')" style="background: #0ea5e9; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            📋 Copy All Info
+          </button>
+          <button onclick="closeDrillDown()" style="background: #22c55e; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            ✅ Done
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.add('active');
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      // Show brief success feedback
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = '✅ Copied!';
+      button.style.background = '#22c55e';
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '#f59e0b';
+      }, 2000);
+    }).catch(err => {
+      console.error('Copy failed:', err);
+      alert('Copy failed. Please manually copy the password: ' + text);
+    });
+  }
+
+  function copyCredentials(name, email, password) {
+    const text = `PostMyStyle App Login Credentials
+
+Name: ${name}
+Email: ${email}
+Temporary Password: ${password}
+
+Instructions:
+1. Download PostMyStyle app from App Store/Google Play
+2. Log in with the email and password above
+3. Change password on first login (recommended)
+4. Start creating posts for your clients!
+
+Welcome to the team! 🎉`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert('✅ All credentials copied to clipboard!\n\nYou can now paste this into an email, text message, or share however you prefer.');
+    }).catch(err => {
+      console.error('Copy failed:', err);
+      alert('Copy failed. Please manually copy the credentials shown above.');
+    });
   }
 
   function updateTeamManagementList() {
@@ -2531,19 +2725,41 @@
       return;
     }
 
-    grid.innerHTML = allProducts.map(product => {
+    // Add products count summary
+    const selectedCount = selectedProducts.size;
+    const totalCount = allProducts.length;
+
+    grid.innerHTML = `
+      <div class="product-stats-summary" style="grid-column: 1 / -1;">
+        <span class="products-count">Showing ${totalCount} products</span>
+        <span class="selected-count">${selectedCount} selected for your salon</span>
+      </div>
+    ` + allProducts.map(product => {
       const isSelected = selectedProducts.has(product.id);
+      const productImage = product.product_image;
+
       return `
         <div class="product-management-card ${isSelected ? 'selected' : ''}" data-product-id="${product.id}">
-          <div class="product-toggle ${isSelected ? 'active' : ''}" onclick="toggleProduct('${product.id}')"></div>
-
-          <div class="product-info">
-            <h4>${product.brand} ${product.product_name}</h4>
-            <p>${product.category}</p>
-            ${product.amazon_price ? `<div class="product-price">$${product.amazon_price}</div>` : ''}
-            ${product.amazon_rating ? `<p style="color: #f59e0b;">⭐ ${product.amazon_rating} (${product.amazon_review_count || 0} reviews)</p>` : ''}
-            <div class="product-category">${product.category}</div>
+          <div class="product-image-container">
+            ${productImage ?
+              `<img src="${productImage}" alt="${product.product_name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+               <div class="product-image-placeholder" style="display: none;">📦</div>` :
+              `<div class="product-image-placeholder">📦</div>`
+            }
           </div>
+
+          <div class="product-info-compact">
+            <h4>${product.brand} ${product.product_name}</h4>
+            <div class="product-meta">
+              <span class="product-category-badge">${product.category}</span>
+              ${product.amazon_rating ? `
+                <span class="product-rating">⭐ ${product.amazon_rating}</span>
+              ` : ''}
+            </div>
+            ${product.amazon_price ? `<div class="product-price">${product.amazon_price}</div>` : ''}
+          </div>
+
+          <div class="product-toggle ${isSelected ? 'active' : ''}" onclick="toggleProduct('${product.id}')" title="${isSelected ? 'Remove from salon' : 'Add to salon'}"></div>
         </div>
       `;
     }).join('');
@@ -2673,34 +2889,65 @@
 
   function filterProducts(category) {
     const cards = document.querySelectorAll('.product-management-card');
+    const statsRow = document.querySelector('.product-stats-summary');
+    let visibleCount = 0;
 
     cards.forEach(card => {
+      // Skip the stats summary row
+      if (card.classList.contains('product-stats-summary')) return;
+
       const productId = card.dataset.productId;
       const product = allProducts.find(p => p.id === productId);
 
       if (category === 'all' || product.category === category) {
-        card.style.display = 'block';
+        card.style.display = 'flex';
+        visibleCount++;
       } else {
         card.style.display = 'none';
       }
     });
+
+    // Update stats
+    if (statsRow) {
+      const selectedCount = selectedProducts.size;
+      statsRow.innerHTML = `
+        <span class="products-count">Showing ${visibleCount} products${category !== 'all' ? ` in ${category}` : ''}</span>
+        <span class="selected-count">${selectedCount} selected for your salon</span>
+      `;
+    }
   }
 
   function searchProducts(searchTerm) {
     const cards = document.querySelectorAll('.product-management-card');
+    const statsRow = document.querySelector('.product-stats-summary');
     const term = searchTerm.toLowerCase();
+    let visibleCount = 0;
 
     cards.forEach(card => {
+      // Skip the stats summary row
+      if (card.classList.contains('product-stats-summary')) return;
+
       const productId = card.dataset.productId;
       const product = allProducts.find(p => p.id === productId);
-      const searchText = `${product.brand} ${product.product_name}`.toLowerCase();
+      const searchText = `${product.brand} ${product.product_name} ${product.category}`.toLowerCase();
 
-      if (searchText.includes(term)) {
-        card.style.display = 'block';
+      if (!term || searchText.includes(term)) {
+        card.style.display = 'flex';
+        visibleCount++;
       } else {
         card.style.display = 'none';
       }
     });
+
+    // Update stats
+    if (statsRow) {
+      const selectedCount = selectedProducts.size;
+      const searchInfo = term ? ` matching "${searchTerm}"` : '';
+      statsRow.innerHTML = `
+        <span class="products-count">Showing ${visibleCount} products${searchInfo}</span>
+        <span class="selected-count">${selectedCount} selected for your salon</span>
+      `;
+    }
   }
 
   // NEW: Navigation functions for management sections
