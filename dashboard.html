@@ -2527,9 +2527,11 @@
   }
 
   function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      // Show brief success feedback
-      const button = event.target;
+  navigator.clipboard.writeText(text).then(() => {
+    // Show brief success feedback
+    const buttons = document.querySelectorAll('button');
+    const button = Array.from(buttons).find(btn => btn.textContent.includes('Copy'));
+    if (button) {
       const originalText = button.textContent;
       button.textContent = '✅ Copied!';
       button.style.background = '#22c55e';
@@ -2537,11 +2539,14 @@
         button.textContent = originalText;
         button.style.background = '#f59e0b';
       }, 2000);
-    }).catch(err => {
-      console.error('Copy failed:', err);
-      alert('Copy failed. Please manually copy the password: ' + text);
-    });
-  }
+    } else {
+      alert('✅ Password copied to clipboard!');
+    }
+  }).catch(err => {
+    console.error('Copy failed:', err);
+    alert('Copy failed. Please manually copy the password: ' + text);
+  });
+}
 
   function copyCredentials(name, email, password) {
     const text = `PostMyStyle App Login Credentials
