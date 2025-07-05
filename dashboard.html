@@ -2385,85 +2385,78 @@
   }
 
   async function createNewStylist() {
-    const name = document.getElementById('stylistName').value.trim();
-    const email = document.getElementById('stylistEmail').value.trim();
-    const phone = document.getElementById('stylistPhone').value.trim();
+  const name = document.getElementById('stylistName').value.trim();
+  const email = document.getElementById('stylistEmail').value.trim();
+  const phone = document.getElementById('stylistPhone').value.trim();
 
-    if (!name || !email) {
-      alert('Please fill in the required fields (Name and Email).');
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-
-    // Check if Supabase is available
-    if (!supabase) {
-      alert('Database connection not available. Please refresh the page and try again.');
-      return;
-    }
-
-    try {
-      console.log('Creating new stylist:', { name, email });
-
-      // Generate a readable password that the admin can easily share
-      const tempPassword = generateReadablePassword();
-
-      // Step 1: Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: {
-          stylist_name: name,
-          salon_id: salonData.salon_id,
-          role: 'stylist'
-        }
-      });
-
-      if (authError) {
-        console.error('Auth user creation failed:', authError);
-        throw new Error(`Failed to create user account: ${authError.message}`);
-      }
-
-      console.log('Auth user created:', authData.user.id);
-
-      // Step 2: Create stylist record
-      const { data: stylistData, error: stylistError } = await supabase
-        .from('stylists')
-        .insert({
-          stylist_name: name,
-          email: email,
-          phone: phone || null,
-          salon_id: salonData.salon_id,
-          user_id: authData.user.id // Link to auth user
-        })
-        .select()
-        .single();
-
-      if (stylistError) {
-        console.error('Stylist creation failed:', stylistError);
-        throw new Error(`Failed to create stylist record: ${stylistError.message}`);
-      }
-
-      console.log('Stylist created successfully:', stylistData);
-
-      // Show success message with password clearly displayed
-      showStylistCreatedModal(name, email, tempPassword);
-
-      // Hide form and refresh data
-      hideAddStylistForm();
-      await loadStylistsData(salonData.salon_id);
-
-    } catch (error) {
-      console.error('Error creating stylist:', error);
-      alert(`❌ Error creating stylist: ${error.message}`);
-    }
+  if (!name || !email) {
+    alert('Please fill in the required fields (Name and Email).');
+    return;
   }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+
+  // Check if Supabase is available
+  if (!supabase) {
+    alert('Database connection not available. Please refresh the page and try again.');
+    return;
+  }
+
+  try {
+    console.log('Creating new stylist via Edge Function:', { name, email });
+
+    // Get current user session for authentication
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      throw new Error('You must be logged in to create stylists. Please refresh and log in again.');
+    }
+
+    console.log('User session verified, calling Edge Function...');
+
+    // Call the Edge Function
+    const { data, error } = await supabase.functions.invoke('create-stylist', {
+      body: {
+        name: name,
+        email: email,
+        phone: phone || null,
+        salonId: salonData.salon_id
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (error) {
+      console.error('Edge Function error:', error);
+      throw new Error(`Function call failed: ${error.message}`);
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || 'Unknown error occurred');
+    }
+
+    console.log('Stylist created successfully:', data.stylist);
+
+    // Show success modal with credentials
+    showStylistCreatedModal(name, email, data.credentials.password);
+
+    // Hide form and refresh data
+    hideAddStylistForm();
+    await loadStylistsData(salonData.salon_id);
+
+  } catch (error) {
+    console.error('Error creating stylist:', error);
+    alert(`❌ Error creating stylist: ${error.message}`);
+  }
+}
+
+
 
   function generateReadablePassword() {
     // Generate a password that's easy to communicate: 3 words + 2 numbers
