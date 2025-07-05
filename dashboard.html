@@ -2989,20 +2989,27 @@ Welcome to the team! 🎉`;
   }
 
   function showDashboardSections() {
-    const sections = [
-      'dashboardSection',
-      'metricsSection',
-      'chartsSection',
-      'performanceSection'
-    ];
+  const sections = [
+    'dashboardSection',
+    'metricsSection',
+    'chartsSection',
+    'performanceSection'
+  ];
 
-    sections.forEach(sectionId => {
-      const section = document.getElementById(sectionId);
-      if (section) {
-        section.style.display = 'block';
+  sections.forEach(sectionId => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.style.display = 'block';
+      // Restore any grid properties that might have been lost
+      if (sectionId === 'metricsSection') {
+        section.style.display = 'grid'; // metrics-grid uses CSS grid
       }
-    });
-  }
+      if (sectionId === 'chartsSection') {
+        section.style.display = 'grid'; // charts-section uses CSS grid
+      }
+    }
+  });
+}
 
   // UPDATED: Enhanced product drill-down with real salon products and interactions
   function generateProductDrillDown() {
@@ -4666,11 +4673,25 @@ Try the quick action buttons above for specific business strategies, or contact 
 
   // Sidebar navigation functions
   function showDashboard() {
-      hideAllSections();
-      showDashboardSections();
-      setActiveNavItem('Dashboard');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  hideAllSections();
+  showDashboardSections();
+  setActiveNavItem('Dashboard');
+
+  // FORCE LAYOUT RESTORATION
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  if (dashboardContainer) {
+    dashboardContainer.style.display = 'grid';
+    dashboardContainer.style.gridTemplateColumns = '280px 1fr';
   }
+
+  // Ensure main content has proper styling
+  const mainContent = document.querySelector('.main-content');
+  if (mainContent) {
+    mainContent.style.display = 'block';
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
   function showTeamPerformance() {
       hideAllSections();
