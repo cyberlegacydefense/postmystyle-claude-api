@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <title>Data Deletion Instructions - PostMyStyle.ai</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 0;
+            color: white;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            margin-top: -2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+
+        h2 {
+            color: #333;
+            margin: 2rem 0 1rem 0;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #555;
+            margin: 1.5rem 0 0.5rem 0;
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #666;
+        }
+
+        ul {
+            margin: 1rem 0 1rem 2rem;
+            color: #666;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .effective-date {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            font-style: italic;
+            color: #666;
+        }
+
+        .highlight-box {
+            background: #e8f4fd;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        .deletion-steps {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .deletion-steps .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .deletion-steps .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .timeline-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .timeline-table th,
+        .timeline-table td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .timeline-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .email-template {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+
+        .social-deletion {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Data Deletion Instructions</h1>
+    <p>Complete guide to deleting your data from PostMyStyle.ai</p>
+</div>
+
+<div class="container">
+    <a href="index.html" class="nav-link">← Back to Home</a>
+
+    <div class="effective-date">
+        <strong>Last Updated:</strong> January 1, 2025
+    </div>
+
+    <div class="highlight-box">
+        <strong>Your Right to Delete:</strong> You have the absolute right to request deletion of all your personal data from PostMyStyle.ai at any time. This page explains exactly how to do that and what happens next.
+    </div>
+
+    <h2>1. Quick Deletion Request</h2>
+
+    <div class="deletion-steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <strong>Email Us:</strong> Send a deletion request to <a href="mailto:privacy@postmystyle.ai">privacy@postmystyle.ai</a>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <strong>Include:</strong> Your account email and "Delete My Data" in the subject line
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <strong>Confirmation:</strong> We'll respond within 24 hours with deletion confirmation
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <strong>Complete:</strong> All data permanently deleted within 30 days
+            </div>
+        </div>
+    </div>
+
+    <h2>2. Email Template</h2>
+
+    <div class="email-template">
+        <strong>To:</strong> privacy@postmystyle.ai<br>
+        <strong>Subject:</strong> Delete My Data - [Your Email Address]<br><br>
+
+        Dear PostMyStyle.ai Privacy Team,<br><br>
+
+        I am requesting the complete deletion of my personal data from your system. Please delete all information associated with my account including:<br><br>
+
+        - Account information and profile data<br>
+        - Generated content and AI interactions<br>
+        - Usage analytics and logs<br>
+        - Any backup or cached data<br><br>
+
+        My account email: [your-email@example.com]<br>
+        Account name/salon: [if applicable]<br><br>
+
+        Please confirm once deletion is complete.<br><br>
+
+        Thank you,<br>
+        [Your Name]
+    </div>
+
+    <h2>3. What Data Gets Deleted</h2>
+
+    <h3>3.1 Immediately Deleted (Within 24 Hours)</h3>
+    <ul>
+        <li>Account access (login disabled)</li>
+        <li>Active user profile and preferences</li>
+        <li>Current session data and cached content</li>
+        <li>Marketing email subscriptions</li>
+    </ul>
+
+    <h3>3.2 Permanently Deleted (Within 30 Days)</h3>
+    <ul>
+        <li>All personal information (name, email, phone)</li>
+        <li>Business/salon information and branding</li>
+        <li>Generated content history and templates</li>
+        <li>Usage analytics linked to your account</li>
+        <li>Support tickets and communication history</li>
+        <li>Backup and archived data across all systems</li>
+    </ul>
+
+    <h3>3.3 Legal Retention (If Applicable)</h3>
+    <ul>
+        <li>Financial records may be retained for 7 years for tax compliance</li>
+        <li>Records are anonymized (no personal identifiers)</li>
+        <li>Required by law for business accounting purposes</li>
+    </ul>
+
+    <h2>4. Deletion Timeline</h2>
+
+    <table class="timeline-table">
+        <thead>
+        <tr>
+            <th>Timeframe</th>
+            <th>Action</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Within 1 hour</td>
+            <td>Request acknowledged</td>
+            <td>Email confirmation sent</td>
+        </tr>
+        <tr>
+            <td>Within 24 hours</td>
+            <td>Account deactivated</td>
+            <td>Login access disabled</td>
+        </tr>
+        <tr>
+            <td>Within 7 days</td>
+            <td>Primary systems cleared</td>
+            <td>Main database deletion complete</td>
+        </tr>
+        <tr>
+            <td>Within 30 days</td>
+            <td>Complete erasure</td>
+            <td>All backups and logs purged</td>
+        </tr>
+        <tr>
+            <td>Within 30 days</td>
+            <td>Final confirmation</td>
+            <td>Deletion completion email sent</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>5. Social Media Data (Facebook/Instagram)</h2>
+
+    <div class="social-deletion">
+        <h3>If You Used Auto-Connect Features:</h3>
+        <p>PostMyStyle.ai may have created posts on your social media accounts. <strong>We cannot delete posts from your social media accounts</strong> - you must delete these manually:</p>
+        <ul>
+            <li><strong>Instagram:</strong> Go to your profile → Find posts with #PostMyStyle hashtags → Delete individually</li>
+            <li><strong>Facebook:</strong> Check your timeline for PostMyStyle.ai generated content → Delete posts</li>
+            <li><strong>Revoke App Access:</strong> Go to Facebook/Instagram Settings → Apps → Remove PostMyStyle.ai</li>
+        </ul>
+    </div>
+
+    <h2>6. Alternative Deletion Methods</h2>
+
+    <h3>6.1 Account Dashboard</h3>
+    <p>If you still have access to your account:</p>
+    <ul>
+        <li>Log in to your PostMyStyle.ai dashboard</li>
+        <li>Go to Account Settings → Privacy</li>
+        <li>Click "Delete My Account" button</li>
+        <li>Follow the confirmation prompts</li>
+    </ul>
+
+    <h3>6.2 Phone Support</h3>
+    <p>For urgent deletion requests, you can also:</p>
+    <ul>
+        <li>Call our support line: <strong>(Coming Soon)</strong></li>
+        <li>Speak directly with our privacy team</li>
+        <li>Get immediate confirmation of your request</li>
+    </ul>
+
+    <h2>7. Data Export Before Deletion</h2>
+
+    <div class="warning-box">
+        <strong>⚠️ Important:</strong> Deletion is permanent and irreversible. Consider requesting a data export first if you want to keep any generated content or account information.
+    </div>
+
+    <p>To export your data before deletion:</p>
+    <ul>
+        <li>Email <a href="mailto:privacy@postmystyle.ai">privacy@postmystyle.ai</a> with subject "Export My Data"</li>
+        <li>We'll send you a complete copy within 48 hours</li>
+        <li>Includes all generated content, templates, and account data</li>
+        <li>Delivered as downloadable ZIP file</li>
+    </ul>
+
+    <h2>8. Verification Process</h2>
+
+    <p>To protect your privacy, we may ask for verification:</p>
+    <ul>
+        <li>Confirmation from the email address associated with your account</li>
+        <li>Last 4 digits of payment method (if applicable)</li>
+        <li>Recent login activity confirmation</li>
+        <li>Answer to security question (if set up)</li>
+    </ul>
+
+    <h2>9. Third-Party Data</h2>
+
+    <h3>9.1 Payment Processors</h3>
+    <p>For payment data handled by Stripe:</p>
+    <ul>
+        <li>We'll request deletion from Stripe on your behalf</li>
+        <li>Stripe may retain data for fraud prevention (per their policy)</li>
+        <li>Contact Stripe directly for complete payment data deletion</li>
+    </ul>
+
+    <h3>9.2 AI Processing Partners</h3>
+    <p>For content processed by AI providers (OpenAI, Google, etc.):</p>
+    <ul>
+        <li>Content is processed in real-time and not stored</li>
+        <li>No personal data is retained by AI providers</li>
+        <li>Processing agreements prohibit data retention</li>
+    </ul>
+
+    <h2>10. Confirmation and Follow-Up</h2>
+
+    <div class="success-box">
+        <strong>✅ You Will Receive:</strong>
+        <ul style="margin: 0.5rem 0 0 1rem;">
+            <li>Immediate acknowledgment of your request</li>
+            <li>Weekly progress updates during deletion process</li>
+            <li>Final confirmation when deletion is complete</li>
+            <li>Certificate of deletion for your records</li>
+        </ul>
+    </div>
+
+    <h2>11. Special Circumstances</h2>
+
+    <h3>11.1 Business Accounts</h3>
+    <p>For salon/business accounts with multiple users:</p>
+    <ul>
+        <li>Only the account owner can request full deletion</li>
+        <li>Individual users can request removal of their personal data</li>
+        <li>Business data may be retained if other users remain active</li>
+    </ul>
+
+    <h3>11.2 Legal Holds</h3>
+    <p>In rare cases, deletion may be delayed if:</p>
+    <ul>
+        <li>Data is subject to legal preservation requirements</li>
+        <li>Active investigation or legal proceeding requires data retention</li>
+        <li>We'll notify you immediately if this applies</li>
+    </ul>
+
+    <h2>12. Questions About Deletion</h2>
+
+    <p>If you have questions about the deletion process:</p>
+    <ul>
+        <li><strong>General questions:</strong> <a href="mailto:help@postmystyle.ai">help@postmystyle.ai</a></li>
+        <li><strong>Privacy concerns:</strong> <a href="mailto:privacy@postmystyle.ai">privacy@postmystyle.ai</a></li>
+        <li><strong>Legal inquiries:</strong> <a href="mailto:legal@postmystyle.ai">legal@postmystyle.ai</a></li>
+    </ul>
+
+    <div class="contact-info">
+        <h3>Need Help? Contact Our Privacy Team</h3>
+        <p><strong>Email:</strong> <a href="mailto:privacy@postmystyle.ai">privacy@postmystyle.ai</a></p>
+        <p><strong>Subject Line:</strong> "Delete My Data - [Your Email]"</p>
+        <p><strong>Response Time:</strong> Within 24 hours</p>
+        <br>
+        <p>PostMyStyle.ai<br>
+            Your privacy is our priority.<br>
+            Last Updated: January 1, 2025</p>
+    </div>
+</div>
+</body>
+</html>
