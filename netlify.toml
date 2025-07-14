@@ -16,9 +16,7 @@ command = "echo 'Static site - no build required'"
 directory = "netlify/functions"
 node_bundler = "esbuild"
 
-# Scheduled Functions Plugin
-[[plugins]]
-package = "@netlify/plugin-scheduled-functions"
+# Note: Scheduled functions configured directly in function files using exports.schedule
 
 # CORS Headers for API access
 [[headers]]
