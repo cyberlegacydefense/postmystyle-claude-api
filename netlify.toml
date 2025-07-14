@@ -1,0 +1,82 @@
+# PostMyStyle Website - Netlify Configuration
+# This file configures the UGC monitoring system and functions
+
+[build]
+# Functions directory
+functions = "netlify/functions"
+
+# Publish directory (for your website)
+publish = "."
+
+# Build command (adjust based on your website setup)
+command = "echo 'Website build complete'"
+
+[functions]
+# Functions configuration
+directory = "netlify/functions"
+node_bundler = "esbuild"
+
+# Scheduled Functions Plugin
+[[plugins]]
+package = "@netlify/plugin-scheduled-functions"
+
+# CRITICAL: Scheduled UGC Monitor - runs every 2 hours
+[[functions]]
+name = "scheduled-ugc-monitor"
+schedule = "0 */2 * * *"  # Every 2 hours at minute 0
+
+# Optional: Weekly token refresh check (every Sunday at 3 AM)
+[[functions]]
+name = "refresh-instagram-token"
+schedule = "0 3 * * 0"  # Weekly on Sunday at 3 AM
+
+# CORS Headers for API access
+[[headers]]
+for = "/*"
+[headers.values]
+Access-Control-Allow-Origin = "*"
+Access-Control-Allow-Methods = "GET, POST, OPTIONS, PUT, DELETE"
+Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+# API Redirects - Clean URLs for your functions
+[[redirects]]
+from = "/api/ugc-monitor"
+to = "/.netlify/functions/ugc-monitor"
+status = 200
+
+[[redirects]]
+from = "/api/ugc-analytics"
+to = "/.netlify/functions/ugc-analytics"
+status = 200
+
+[[redirects]]
+from = "/api/ugc-analytics/*"
+to = "/.netlify/functions/ugc-analytics/:splat"
+status = 200
+
+[[redirects]]
+from = "/api/test-ugc"
+to = "/.netlify/functions/test-ugc-monitor"
+status = 200
+
+[[redirects]]
+from = "/api/refresh-token"
+to = "/.netlify/functions/refresh-instagram-token"
+status = 200
+
+# Handle SPA routing (if your website is a single page app)
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+force = false
+
+# Environment-specific settings
+[context.production]
+command = "echo 'Production build'"
+
+[context.deploy-preview]
+command = "echo 'Deploy preview build'"
+
+[context.branch-deploy]
+command = "echo 'Branch deploy build'"
