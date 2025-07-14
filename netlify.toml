@@ -5,11 +5,11 @@
 # Functions directory
 functions = "netlify/functions"
 
-# Publish directory (for your website)
+# Publish directory (for static website)
 publish = "."
 
-# Build command (adjust based on your website setup)
-command = "echo 'Website build complete'"
+# No build command needed for static sites
+command = "echo 'Static site - no build required'"
 
 [functions]
 # Functions configuration
@@ -19,16 +19,6 @@ node_bundler = "esbuild"
 # Scheduled Functions Plugin
 [[plugins]]
 package = "@netlify/plugin-scheduled-functions"
-
-# CRITICAL: Scheduled UGC Monitor - runs every 2 hours
-[[functions]]
-name = "scheduled-ugc-monitor"
-schedule = "0 */2 * * *"  # Every 2 hours at minute 0
-
-# Optional: Weekly token refresh check (every Sunday at 3 AM)
-[[functions]]
-name = "refresh-instagram-token"
-schedule = "0 3 * * 0"  # Weekly on Sunday at 3 AM
 
 # CORS Headers for API access
 [[headers]]

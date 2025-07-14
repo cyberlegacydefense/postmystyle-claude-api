@@ -1,5 +1,8 @@
 const axios = require('axios');
 
+// Netlify scheduled function configuration (weekly on Sunday at 3 AM)
+exports.schedule = "0 3 * * 0"; // Weekly token check
+
 // Environment variables
 const CURRENT_ACCESS_TOKEN = process.env.INSTAGRAM_ACCESS_TOKEN;
 const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
