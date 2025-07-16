@@ -1,0 +1,13 @@
+{
+  "name": "postmystyle-website",
+  "version": "1.0.0",
+  "description": "PostMyStyle website with UGC monitoring functions",
+  "main": "index.html",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "scripts": {
+    "build": "echo 'No build required for static site'"
+  },
+  "license": "MIT"
+}
