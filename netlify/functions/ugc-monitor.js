@@ -9,7 +9,7 @@ const MONITORING_WEBHOOK = process.env.MONITORING_ALERT_WEBHOOK;
 
 exports.handler = async (event, context) => {
   const startTime = Date.now();
-  console.log('🔍 PostMyStyle UGC Monitor v6.0 - Complete Production Ready');
+  console.log('🔍 PostMyStyle UGC Monitor v6.1 - Final Production Ready');
   console.log(`🕐 Start time: ${new Date().toISOString()}`);
 
   // Validate environment variables
@@ -127,11 +127,11 @@ async function validateInstagramAPI() {
       throw new Error(`Invalid ACCESS_TOKEN: ${ACCESS_TOKEN ? 'too short' : 'missing'}`);
     }
 
-    // Test Instagram API connection
+    // Test Instagram API connection with working fields
     const url = `https://graph.facebook.com/v19.0/${IG_BUSINESS_ID}`;
     const params = {
       access_token: ACCESS_TOKEN,
-      fields: 'id,username,media_count,followers_count'
+      fields: 'id,username,media_count,followers_count' // FIXED: Removed account_type field
     };
 
     console.log('🔍 TESTING INSTAGRAM API CONNECTION:');
@@ -142,7 +142,7 @@ async function validateInstagramAPI() {
       params: params,
       timeout: 10000,
       headers: {
-        'User-Agent': 'PostMyStyle-UGC-Monitor/6.0'
+        'User-Agent': 'PostMyStyle-UGC-Monitor/6.1'
       }
     });
 
@@ -295,7 +295,7 @@ async function searchSessionHashtag(session, results) {
 
     console.log(`✅ Step 1 SUCCESS: Hashtag found - ID: ${hashtagData.id}`);
 
-    // Step 2: Get posts using improved method (top_media first, no username field)
+    // Step 2: Get posts using fixed method (top_media first, no username field)
     console.log(`🔍 Step 2: Getting posts for hashtag ID ${hashtagData.id}`);
     const posts = await getHashtagPosts(hashtagData.id, sessionHashtag, results);
 
@@ -322,7 +322,7 @@ async function searchSessionHashtag(session, results) {
             results.newDiscoveries++;
             results.sessionsCorrelated++;
 
-            // Update session status to 'discovered' using service role key
+            // Update session status to 'discovered' (FIXED: no updated_at field)
             const updateSuccess = await updateSessionDiscoveryStatus(session.id, 'discovered');
             if (updateSuccess) {
               results.stats.sessionsUpdated++;
@@ -403,13 +403,13 @@ async function getHashtagPosts(hashtagId, hashtagName, results) {
           params: {
             access_token: ACCESS_TOKEN,
             user_id: IG_BUSINESS_ID,
-            // CRITICAL FIX: Remove username field that was causing permission errors
+            // CRITICAL FIX: Only use fields that work (no username field)
             fields: 'id,media_type,caption,timestamp',
             limit: 25
           },
           timeout: 15000,
           headers: {
-            'User-Agent': 'PostMyStyle-UGC-Monitor/6.0'
+            'User-Agent': 'PostMyStyle-UGC-Monitor/6.1'
           }
         });
 
@@ -469,7 +469,7 @@ async function processSessionUGCPost(post, session, sourceHashtag, results) {
 
   console.log(`📝 Processing post ${post.id}: "${post.caption.substring(0, 120)}..."`);
 
-  // Extract session IDs using multiple patterns (like working local script)
+  // Extract session IDs using multiple patterns
   const sessionIds = extractSessionIds(post.caption);
 
   if (sessionIds.length === 0) {
@@ -667,7 +667,7 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
   try {
     console.log(`🔍 DEBUG: Updating session ${sessionId} to status: "${status}"`);
 
-    // Verify API key format (service role should start with 'eyJ' and be long)
+    // Verify API key format
     const keyType = SUPABASE_API_KEY ?
       (SUPABASE_API_KEY.startsWith('eyJ') ?
         (SUPABASE_API_KEY.length > 150 ? 'SERVICE_ROLE ✅' : 'JWT but short ⚠️') :
@@ -675,10 +675,6 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
       'MISSING ❌';
 
     console.log(`🔑 API Key Type: ${keyType} (length: ${SUPABASE_API_KEY?.length || 0})`);
-
-    if (!SUPABASE_API_KEY.startsWith('eyJ') || SUPABASE_API_KEY.length < 150) {
-      console.warn(`⚠️ WARNING: API key doesn't look like service role key - RLS bypass may not work`);
-    }
 
     // Check current record first
     console.log(`🔍 Step 1: Verifying session exists...`);
@@ -702,17 +698,15 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
     console.log(`✅ Found session record:`, {
       id: currentRecord.id,
       currentStatus: currentRecord.ugc_discovery_status,
-      trackingCode: currentRecord.public_tracking_code,
-      stylistId: currentRecord.stylist_id?.substring(0, 8) + '...' // Partial for privacy
+      trackingCode: currentRecord.public_tracking_code
     });
 
-    // Attempt the update with service role headers
-    console.log(`🔍 Step 2: Attempting update with service role bypass...`);
+    // CRITICAL FIX: Only update ugc_discovery_status (no updated_at column)
+    console.log(`🔍 Step 2: Attempting update with ONLY status field...`);
     const updateResponse = await axios.patch(
       `${SUPABASE_URL}/rest/v1/media_send?id=eq.${sessionId}`,
       {
-        ugc_discovery_status: status,
-        updated_at: new Date().toISOString()
+        ugc_discovery_status: status  // FIXED: Removed updated_at field - it doesn't exist!
       },
       {
         headers: {
@@ -728,7 +722,33 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
     console.log(`✅ SUCCESS: Session ${sessionId} status updated to "${status}"`);
     console.log(`📊 Update response status: ${updateResponse.status} ${updateResponse.statusText}`);
 
-    return true;
+    // Verify the update worked
+    console.log(`🔍 Step 3: Verifying update worked...`);
+    const verifyResponse = await axios.get(
+      `${SUPABASE_URL}/rest/v1/media_send?id=eq.${sessionId}&select=id,ugc_discovery_status,public_tracking_code`,
+      {
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+          'apikey': SUPABASE_API_KEY
+        },
+        timeout: 10000
+      }
+    );
+
+    const updatedRecord = verifyResponse.data[0];
+    console.log(`📊 Verification result:`, {
+      id: updatedRecord.id,
+      newStatus: updatedRecord.ugc_discovery_status,
+      trackingCode: updatedRecord.public_tracking_code
+    });
+
+    if (updatedRecord.ugc_discovery_status === status) {
+      console.log(`🎉 STATUS UPDATE CONFIRMED: Successfully changed to "${status}"`);
+      return true;
+    } else {
+      console.log(`⚠️ Status verification failed - expected "${status}", got "${updatedRecord.ugc_discovery_status}"`);
+      return false;
+    }
 
   } catch (error) {
     console.error(`❌ UPDATE FAILED for session ${sessionId}:`);
@@ -739,21 +759,9 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
       console.error(`   Supabase Error Details:`, JSON.stringify(error.response.data, null, 2));
     }
 
-    // Analyze the specific error type
-    if (error.response?.status === 400) {
-      console.log(`🔍 400 Error Analysis: Likely bad request format or constraint violation`);
-    } else if (error.response?.status === 401) {
-      console.log(`🔍 401 Error Analysis: Authentication failed - check API key`);
-    } else if (error.response?.status === 403) {
-      console.log(`🔍 403 Error Analysis: Forbidden - RLS policy blocking update`);
-      console.log(`   💡 Solution: Ensure you're using SERVICE_ROLE key, not anon key`);
-    } else if (error.response?.status === 404) {
-      console.log(`🔍 404 Error Analysis: Session not found or URL incorrect`);
-    }
-
     // Try alternative approach - update by tracking code instead of UUID
     try {
-      console.log(`🔍 Step 3: Trying alternative approach - update by tracking code...`);
+      console.log(`🔍 Step 4: Trying alternative approach - update by tracking code...`);
       const currentRecord = checkResponse?.data?.[0];
       if (currentRecord?.public_tracking_code) {
         const trackingCode = currentRecord.public_tracking_code;
@@ -761,7 +769,7 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
         const altResponse = await axios.patch(
           `${SUPABASE_URL}/rest/v1/media_send?public_tracking_code=eq.${trackingCode}`,
           {
-            ugc_discovery_status: status
+            ugc_discovery_status: status  // ONLY status field, no updated_at
           },
           {
             headers: {
@@ -781,14 +789,6 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
     } catch (altError) {
       console.log(`❌ Alternative approach also failed: ${altError.response?.data?.message || altError.message}`);
     }
-
-    // Log final troubleshooting steps
-    console.log(`\n🔧 TROUBLESHOOTING STEPS:`);
-    console.log(`   1. Verify SUPABASE_API_KEY is the SERVICE_ROLE key (not anon key)`);
-    console.log(`   2. Check if service_role key bypasses RLS in Supabase dashboard`);
-    console.log(`   3. Consider adding UGC-specific RLS policy as fallback`);
-    console.log(`   Current API key length: ${SUPABASE_API_KEY?.length || 0} chars`);
-    console.log(`   Should be 200+ chars and start with 'eyJ'`);
 
     // Don't throw error - let UGC discovery continue working
     console.log(`⚠️ Status update failed, but UGC discovery was successful`);
