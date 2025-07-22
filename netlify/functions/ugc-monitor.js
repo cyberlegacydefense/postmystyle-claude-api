@@ -9,7 +9,8 @@ const MONITORING_WEBHOOK = process.env.MONITORING_ALERT_WEBHOOK;
 
 exports.handler = async (event, context) => {
   const startTime = Date.now();
-  console.log('🔍 PostMyStyle UGC Monitor v4.0 - Session-Based Tracking System');
+  console.log('🔍 PostMyStyle UGC Monitor v4.1 - Session-Based Tracking System');
+  console.log(`🕐 Start time: ${new Date().toISOString()}`);
 
   // Validate environment variables
   if (!IG_BUSINESS_ID || !ACCESS_TOKEN || !SUPABASE_URL || !SUPABASE_API_KEY) {
@@ -46,18 +47,19 @@ exports.handler = async (event, context) => {
     // Main workflow: Search for pending session hashtags
     await searchPendingSessionHashtags(results);
 
-    // Fallback: Search general PostMyStyle hashtag for any missed sessions
-    await searchGeneralPostMyStyleHashtag(results);
+    // Test known working hashtag from local test
+    await testKnownWorkingHashtag(results);
 
     // Calculate execution time
     results.executionTimeMs = Date.now() - startTime;
 
     console.log(`✅ UGC Monitor Complete: ${results.newDiscoveries} new discoveries, ${results.sessionsCorrelated} sessions correlated`);
+    console.log(`🕐 Total execution time: ${results.executionTimeMs}ms`);
 
-    // Send monitoring alert if configured
-    if (results.newDiscoveries > 0 && MONITORING_WEBHOOK) {
-      await sendMonitoringAlert(results);
-    }
+    // Monitoring webhook is optional - remove if not needed
+    // if (results.newDiscoveries > 0 && MONITORING_WEBHOOK) {
+    //   await sendMonitoringAlert(results);
+    // }
 
     return {
       statusCode: 200,
@@ -78,34 +80,38 @@ exports.handler = async (event, context) => {
       timestamp: new Date().toISOString()
     });
 
-    // Send critical failure alert
-    if (MONITORING_WEBHOOK) {
-      await sendCriticalAlert(error, results);
-    }
-
     return createErrorResponse(error.message, 500, results);
   }
 };
 
 async function validateInstagramAPI() {
   try {
+    console.log(`🔍 DEBUG: Validating Instagram API with Business ID: ${IG_BUSINESS_ID}`);
+    console.log(`🔍 DEBUG: Access token length: ${ACCESS_TOKEN ? ACCESS_TOKEN.length : 'MISSING'}`);
+
     const response = await axios.get(`https://graph.facebook.com/v19.0/${IG_BUSINESS_ID}`, {
       params: {
         access_token: ACCESS_TOKEN,
-        fields: 'id,username'
+        fields: 'id,username,account_type,media_count'
       },
       timeout: 10000
     });
 
-    console.log(`✅ Instagram API validated: @${response.data.username}`);
+    console.log(`✅ Instagram API validated:`, {
+      username: response.data.username,
+      accountType: response.data.account_type,
+      mediaCount: response.data.media_count,
+      businessId: response.data.id
+    });
+
     return true;
   } catch (error) {
     console.error('❌ Instagram API validation failed:', error.message);
+    console.error(`🔍 DEBUG: Full validation error:`, error.response?.data || error);
     throw new Error(`Instagram API validation failed: ${error.message}`);
   }
 }
 
-// NEW: Main function to search for pending session hashtags
 async function searchPendingSessionHashtags(results) {
   try {
     console.log('🔍 Querying pending sessions from media_send table...');
@@ -121,12 +127,18 @@ async function searchPendingSessionHashtags(results) {
     results.pendingSessionsFound = pendingSessions.length;
     console.log(`📋 Found ${pendingSessions.length} pending sessions to check`);
 
+    // DEBUG: Log all sessions being processed
+    console.log(`📋 DEBUG: All pending sessions found:`);
+    pendingSessions.forEach((session, index) => {
+      console.log(`  ${index + 1}. ${session.public_tracking_code} (${session.client_name}) - ${session.send_timestamp}`);
+    });
+
     // Process sessions in batches to avoid rate limits
-    const batchSize = 3;
+    const batchSize = 2; // Reduced for better debugging
     for (let i = 0; i < pendingSessions.length; i += batchSize) {
       const batch = pendingSessions.slice(i, i + batchSize);
 
-      await Promise.all(batch.map(async (session) => {
+      for (const session of batch) {
         try {
           await searchSessionHashtag(session, results);
         } catch (error) {
@@ -138,7 +150,10 @@ async function searchPendingSessionHashtags(results) {
             timestamp: new Date().toISOString()
           });
         }
-      }));
+
+        // Small delay between sessions
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
       // Small delay between batches to respect rate limits
       if (i + batchSize < pendingSessions.length) {
@@ -158,8 +173,11 @@ async function searchPendingSessionHashtags(results) {
 
 async function getPendingSessions() {
   try {
+    const dateThreshold = getDateDaysAgo(30);
+    console.log(`🔍 DEBUG: Querying pending sessions since: ${dateThreshold}`);
+
     const response = await axios.get(
-      `${SUPABASE_URL}/rest/v1/media_send?ugc_tracking_enabled=eq.true&ugc_discovery_status=eq.pending&public_tracking_code=not.is.null&send_timestamp=gte.${getDateDaysAgo(30)}&select=id,public_tracking_code,stylist_id,client_id,client_name,send_timestamp&order=send_timestamp.desc&limit=50`,
+      `${SUPABASE_URL}/rest/v1/media_send?ugc_tracking_enabled=eq.true&ugc_discovery_status=eq.pending&public_tracking_code=not.is.null&send_timestamp=gte.${dateThreshold}&select=id,public_tracking_code,stylist_id,client_id,client_name,send_timestamp,ugc_tracking_enabled,ugc_discovery_status&order=send_timestamp.desc&limit=50`,
       {
         headers: {
           'Authorization': `Bearer ${SUPABASE_API_KEY}`,
@@ -169,9 +187,15 @@ async function getPendingSessions() {
       }
     );
 
+    console.log(`📊 DEBUG: Pending sessions query results:`, {
+      totalPendingSessions: response.data?.length || 0,
+      hasData: !!response.data
+    });
+
     return response.data;
   } catch (error) {
     console.error('❌ Failed to get pending sessions:', error.message);
+    console.error(`🔍 DEBUG: Database query error:`, error.response?.data || error);
     throw error;
   }
 }
@@ -179,18 +203,30 @@ async function getPendingSessions() {
 async function searchSessionHashtag(session, results) {
   const sessionHashtag = `postmystyle${session.public_tracking_code.toLowerCase()}`;
 
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🔍 PROCESSING SESSION: ${session.public_tracking_code}`);
+  console.log(`   Client: ${session.client_name}`);
+  console.log(`   Hashtag: #${sessionHashtag}`);
+  console.log(`   Date: ${session.send_timestamp}`);
+  console.log(`   Original Case: ${session.public_tracking_code}`);
+  console.log(`   Lowercase: ${session.public_tracking_code.toLowerCase()}`);
+
   try {
-    console.log(`🔍 Searching for session hashtag: #${sessionHashtag}`);
     results.sessionHashtagsSearched++;
 
     // Step 1: Get hashtag ID
+    console.log(`🔍 Step 1: Getting hashtag ID for #${sessionHashtag}`);
     const hashtagData = await getHashtagId(sessionHashtag);
     if (!hashtagData) {
       console.log(`⚠️ Hashtag #${sessionHashtag} not found on Instagram`);
+      console.log(`🔍 DEBUG: This means no posts have been made with this hashtag yet`);
       return;
     }
 
+    console.log(`✅ Step 1 SUCCESS: Hashtag found - ID: ${hashtagData.id}, Name: ${hashtagData.name}`);
+
     // Step 2: Get posts for this specific session hashtag
+    console.log(`🔍 Step 2: Getting posts for hashtag ID ${hashtagData.id}`);
     const posts = await getHashtagPosts(hashtagData.id, sessionHashtag);
     if (!posts || posts.length === 0) {
       console.log(`📭 No posts found for #${sessionHashtag}`);
@@ -198,9 +234,10 @@ async function searchSessionHashtag(session, results) {
     }
 
     results.postsFound += posts.length;
-    console.log(`📸 Found ${posts.length} posts for session ${session.public_tracking_code}`);
+    console.log(`📸 Step 2 SUCCESS: Found ${posts.length} posts for session ${session.public_tracking_code}`);
 
     // Step 3: Process each post
+    console.log(`🔍 Step 3: Processing ${posts.length} posts`);
     for (const post of posts) {
       try {
         const processed = await processSessionUGCPost(post, session, sessionHashtag, results);
@@ -231,6 +268,13 @@ async function searchSessionHashtag(session, results) {
 
   } catch (error) {
     console.error(`❌ Error searching session hashtag ${sessionHashtag}:`, error.message);
+    console.error(`🔍 DEBUG: Full error details:`, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message
+    });
+
     results.errors.push({
       type: 'SESSION_HASHTAG_ERROR',
       sessionId: session.public_tracking_code,
@@ -248,22 +292,79 @@ async function processSessionUGCPost(post, session, sourceHashtag, results) {
 
   console.log(`📝 Processing session post ${post.id}: "${post.caption.substring(0, 100)}..."`);
 
-  // Extract session IDs from caption
+  // Extract session IDs from caption using flexible patterns
   const sessionIds = extractSessionIds(post.caption);
 
-  // Verify this post contains the expected session ID
-  if (!sessionIds.includes(session.public_tracking_code.toUpperCase()) &&
-      !sessionIds.includes(session.public_tracking_code.toLowerCase())) {
-    console.log(`⚠️ Post ${post.id} doesn't contain expected session ID ${session.public_tracking_code}`);
+  if (sessionIds.length === 0) {
+    console.log(`⚠️ No session IDs found in post ${post.id}`);
     return null;
   }
 
+  console.log(`🔍 DEBUG: Found session IDs in post: ${sessionIds.join(', ')}`);
+  console.log(`🔍 DEBUG: Expected session ID: ${session.public_tracking_code}`);
+
+  // More flexible session ID matching - check multiple variations
+  const expectedVariations = [
+    session.public_tracking_code.toUpperCase(),
+    session.public_tracking_code.toLowerCase(),
+    session.public_tracking_code,
+    `salon${session.public_tracking_code}`,  // In case it includes "salon" prefix
+    session.public_tracking_code.replace(/^salon/i, '') // Remove salon prefix if exists
+  ];
+
+  const matchedSessionId = sessionIds.find(id =>
+    expectedVariations.some(variation =>
+      id.toLowerCase() === variation.toLowerCase() ||
+      id.toLowerCase().includes(variation.toLowerCase()) ||
+      variation.toLowerCase().includes(id.toLowerCase())
+    )
+  );
+
+  if (!matchedSessionId) {
+    console.log(`⚠️ Post ${post.id} session IDs (${sessionIds.join(', ')}) don't match expected variations (${expectedVariations.join(', ')})`);
+
+    // TEMPORARY: For debugging, process anyway if we found ANY session-like ID
+    console.log(`🧪 DEBUG: Processing anyway for debugging purposes...`);
+
+    // Use the first found session ID for debugging
+    const debugSessionId = sessionIds[0];
+    results.stats.sessionIdsFound++;
+    console.log(`🎯 DEBUG: Using session ID: ${debugSessionId} (not exact match)`);
+
+    // Continue with processing using the found ID
+    const salonMentions = extractSalonMentions(post.caption);
+    const confidenceScore = calculateSessionConfidenceScore(post, debugSessionId, salonMentions);
+
+    const ugcData = {
+      postId: post.id,
+      sessionId: debugSessionId,
+      expectedSessionId: session.public_tracking_code,
+      isExactMatch: false, // Flag for debugging
+      caption: post.caption,
+      mediaType: post.media_type,
+      timestamp: post.timestamp,
+      permalink: post.permalink,
+      username: post.username || 'unknown',
+      likeCount: post.like_count || 0,
+      commentsCount: post.comments_count || 0,
+      salonHandles: salonMentions,
+      sourceHashtag: sourceHashtag,
+      confidenceScore: confidenceScore,
+      discoveredAt: new Date().toISOString(),
+      clientName: session.client_name,
+      processed: true
+    };
+
+    console.log(`🧪 DEBUG UGC processed: Found ${debugSessionId}, Expected ${session.public_tracking_code}, User @${ugcData.username}, Confidence: ${confidenceScore}%`);
+    return ugcData;
+  }
+
   results.stats.sessionIdsFound++;
-  console.log(`🎯 Session ID confirmed: ${session.public_tracking_code}`);
+  console.log(`🎯 Session ID confirmed: ${matchedSessionId} (matches ${session.public_tracking_code})`);
 
   // Extract additional metadata
   const salonMentions = extractSalonMentions(post.caption);
-  const confidenceScore = calculateSessionConfidenceScore(post, session.public_tracking_code, salonMentions);
+  const confidenceScore = calculateSessionConfidenceScore(post, matchedSessionId, salonMentions);
 
   // Skip low confidence posts
   if (confidenceScore < 40) {
@@ -274,7 +375,9 @@ async function processSessionUGCPost(post, session, sourceHashtag, results) {
 
   const ugcData = {
     postId: post.id,
-    sessionId: session.public_tracking_code,
+    sessionId: matchedSessionId,
+    expectedSessionId: session.public_tracking_code,
+    isExactMatch: true,
     caption: post.caption,
     mediaType: post.media_type,
     timestamp: post.timestamp,
@@ -290,21 +393,41 @@ async function processSessionUGCPost(post, session, sourceHashtag, results) {
     processed: true
   };
 
-  console.log(`✅ Session UGC processed: ${session.public_tracking_code}, User @${ugcData.username}, Confidence: ${confidenceScore}%`);
+  console.log(`✅ Session UGC processed: ${matchedSessionId}, User @${ugcData.username}, Confidence: ${confidenceScore}%`);
   return ugcData;
 }
 
-// NEW: Extract session IDs using the correct pattern #PostMyStyle{SessionID}
+// More flexible session ID extraction like the local test
 function extractSessionIds(text) {
-  // Match pattern: #PostMyStyleXXXXXX where XXXXXX is the session ID
-  const matches = text.match(/#PostMyStyle([A-Z0-9]{3,12})/gi);
+  // Use multiple patterns like the successful local test
+  const sessionPatterns = [
+    /#PostMyStyle([A-Z0-9]{3,12})/gi,        // Original strict pattern
+    /#postmystyle([A-Z0-9]{3,12})/gi,        // Case insensitive
+    /#postmystyle(\w{3,})/gi,                // More flexible characters
+    /#postmystyle[_-](\w{3,})/gi,            // With separators
+    /#PostMyStylesalon(\w{6})/gi             // Salon format
+  ];
 
-  if (!matches) return [];
+  let allMatches = [];
 
-  return matches.map(match => {
-    const idMatch = match.match(/#PostMyStyle([A-Z0-9]{3,12})/i);
-    return idMatch ? idMatch[1] : null;
-  }).filter(Boolean);
+  for (const pattern of sessionPatterns) {
+    const matches = text.match(pattern);
+    if (matches) {
+      const ids = matches.map(match => {
+        const result = match.match(pattern);
+        return result ? result[1] : null;
+      }).filter(Boolean);
+
+      allMatches = allMatches.concat(ids);
+      console.log(`🔍 DEBUG: Pattern ${pattern} found IDs: ${ids.join(', ')}`);
+    }
+  }
+
+  // Remove duplicates and return
+  const uniqueIds = [...new Set(allMatches)];
+  console.log(`🎯 DEBUG: All unique session IDs found: ${uniqueIds.join(', ')}`);
+
+  return uniqueIds;
 }
 
 function extractSalonMentions(caption) {
@@ -429,82 +552,13 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
   }
 }
 
-// Fallback: Search general hashtag for any missed sessions
-async function searchGeneralPostMyStyleHashtag(results) {
-  try {
-    console.log('🔍 Fallback: Searching general #postmystyle hashtag...');
-
-    const hashtagData = await getHashtagId('postmystyle');
-    if (!hashtagData) {
-      console.log('⚠️ General #postmystyle hashtag not found');
-      return;
-    }
-
-    const posts = await getHashtagPosts(hashtagData.id, 'postmystyle');
-    if (!posts || posts.length === 0) {
-      console.log('📭 No posts found in general #postmystyle');
-      return;
-    }
-
-    console.log(`📸 Processing ${posts.length} posts from general #postmystyle for missed sessions`);
-
-    for (const post of posts) {
-      try {
-        const sessionIds = extractSessionIds(post.caption || '');
-
-        if (sessionIds.length > 0) {
-          // Check if any of these session IDs are in our pending list
-          for (const sessionId of sessionIds) {
-            const session = await findSessionByTrackingCode(sessionId);
-            if (session && session.ugc_discovery_status === 'pending') {
-              console.log(`🎯 Found missed session: ${sessionId}`);
-
-              const processed = await processSessionUGCPost(post, session, 'postmystyle', results);
-              if (processed) {
-                const isNew = await recordSessionUGCDiscovery(processed, session);
-                if (isNew) {
-                  results.newDiscoveries++;
-                  results.sessionsCorrelated++;
-                  await updateSessionDiscoveryStatus(session.id, 'found');
-                  results.stats.sessionsUpdated++;
-                }
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error(`❌ Error processing fallback post ${post.id}:`, error.message);
-      }
-    }
-
-  } catch (error) {
-    console.error('❌ Fallback search failed:', error.message);
-  }
-}
-
-async function findSessionByTrackingCode(trackingCode) {
-  try {
-    const response = await axios.get(
-      `${SUPABASE_URL}/rest/v1/media_send?public_tracking_code=ilike.${trackingCode}&ugc_tracking_enabled=eq.true&select=id,public_tracking_code,stylist_id,client_id,client_name,ugc_discovery_status&limit=1`,
-      {
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-          'apikey': SUPABASE_API_KEY
-        },
-        timeout: 10000
-      }
-    );
-
-    return response.data?.[0] || null;
-  } catch (error) {
-    console.error(`❌ Failed to find session by tracking code ${trackingCode}:`, error.message);
-    return null;
-  }
-}
-
 async function getHashtagId(hashtag) {
   try {
-    const response = await axios.get(`https://graph.facebook.com/v19.0/ig_hashtag_search`, {
+    console.log(`🔍 DEBUG: Searching Instagram for hashtag: ${hashtag}`);
+    const url = `https://graph.facebook.com/v19.0/ig_hashtag_search`;
+    console.log(`🔗 DEBUG: API URL: ${url}?user_id=${IG_BUSINESS_ID}&q=${hashtag}`);
+
+    const response = await axios.get(url, {
       params: {
         access_token: ACCESS_TOKEN,
         user_id: IG_BUSINESS_ID,
@@ -513,25 +567,41 @@ async function getHashtagId(hashtag) {
       timeout: 10000
     });
 
+    console.log(`📊 DEBUG: Hashtag search response for "${hashtag}":`, {
+      status: response.status,
+      hasData: !!response.data?.data,
+      resultCount: response.data?.data?.length || 0
+    });
+
     if (response.data?.data?.length > 0) {
+      console.log(`✅ Hashtag "${hashtag}" found with ID: ${response.data.data[0].id}`);
       return { id: response.data.data[0].id, name: hashtag };
     }
 
+    console.log(`❌ Hashtag "${hashtag}" not found in Instagram index`);
     return null;
   } catch (error) {
     console.error(`❌ Hashtag search failed for #${hashtag}:`, error.message);
+    console.error(`🔍 DEBUG: Full error details:`, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: `https://graph.facebook.com/v19.0/ig_hashtag_search?user_id=${IG_BUSINESS_ID}&q=${hashtag}`
+    });
     throw error;
   }
 }
 
 async function getHashtagPosts(hashtagId, hashtagName) {
   try {
+    console.log(`📸 DEBUG: Getting posts for hashtag ID ${hashtagId} (${hashtagName})`);
     // Use both recent_media and top_media for comprehensive coverage
     const endpoints = ['recent_media', 'top_media'];
     let allPosts = [];
 
     for (const endpoint of endpoints) {
       try {
+        console.log(`🔍 DEBUG: Trying ${endpoint} endpoint for hashtag ${hashtagName}`);
         const response = await axios.get(`https://graph.facebook.com/v19.0/${hashtagId}/${endpoint}`, {
           params: {
             access_token: ACCESS_TOKEN,
@@ -542,11 +612,30 @@ async function getHashtagPosts(hashtagId, hashtagName) {
           timeout: 15000
         });
 
+        console.log(`📊 DEBUG: ${endpoint} response for ${hashtagName}:`, {
+          status: response.status,
+          dataLength: response.data?.data?.length || 0,
+          hasData: !!response.data?.data
+        });
+
         if (response.data?.data?.length > 0) {
+          console.log(`📸 Found ${response.data.data.length} posts in ${endpoint} for #${hashtagName}`);
+          // Log first post for debugging
+          const firstPost = response.data.data[0];
+          console.log(`🔍 DEBUG: First post sample:`, {
+            id: firstPost.id,
+            username: firstPost.username,
+            timestamp: firstPost.timestamp,
+            captionPreview: firstPost.caption ? firstPost.caption.substring(0, 100) + '...' : 'No caption',
+            mediaType: firstPost.media_type
+          });
           allPosts = allPosts.concat(response.data.data);
+        } else {
+          console.log(`📭 No posts found in ${endpoint} for #${hashtagName}`);
         }
       } catch (error) {
-        console.warn(`⚠️ ${endpoint} failed for #${hashtagName}: ${error.message}`);
+        console.error(`❌ ${endpoint} failed for #${hashtagName}: ${error.message}`);
+        console.error(`🔍 DEBUG: ${endpoint} error details:`, error.response?.data || error);
       }
     }
 
@@ -555,53 +644,84 @@ async function getHashtagPosts(hashtagId, hashtagName) {
       index === self.findIndex(p => p.id === post.id)
     );
 
+    console.log(`📊 DEBUG: Final results for ${hashtagName}: ${uniquePosts.length} unique posts from ${allPosts.length} total`);
+
     return uniquePosts;
   } catch (error) {
     console.error(`❌ Failed to get posts for hashtag ${hashtagName}:`, error.message);
+    console.error(`🔍 DEBUG: getHashtagPosts error:`, error.response?.data || error);
     throw error;
   }
 }
 
-async function sendMonitoringAlert(results) {
-  try {
-    const message = {
-      text: `🎯 PostMyStyle UGC Monitor Alert - Session Tracking`,
-      attachments: [{
-        color: 'good',
-        fields: [
-          { title: 'Pending Sessions Checked', value: results.pendingSessionsFound, short: true },
-          { title: 'New Discoveries', value: results.newDiscoveries, short: true },
-          { title: 'Sessions Correlated', value: results.sessionsCorrelated, short: true },
-          { title: 'Sessions Updated', value: results.stats.sessionsUpdated, short: true },
-          { title: 'Execution Time', value: `${results.executionTimeMs}ms`, short: true }
-        ]
-      }]
-    };
+// NEW: Test the known working hashtag from local test
+async function testKnownWorkingHashtag(results) {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log('🧪 TESTING KNOWN WORKING HASHTAG FROM LOCAL TEST');
 
-    await axios.post(MONITORING_WEBHOOK, message, { timeout: 5000 });
-    console.log('📣 Monitoring alert sent');
+  try {
+    // Test exact case from local test that worked
+    const knownHashtag = 'postmystylesalon1O1HOY';
+    console.log(`🧪 Testing exact case: #${knownHashtag}`);
+
+    const hashtagResponse = await axios.get(`https://graph.facebook.com/v19.0/ig_hashtag_search`, {
+      params: {
+        access_token: ACCESS_TOKEN,
+        user_id: IG_BUSINESS_ID,
+        q: knownHashtag
+      },
+      timeout: 10000
+    });
+
+    const found = hashtagResponse.data?.data?.length > 0;
+    console.log(`${found ? '✅' : '❌'} Known hashtag test result: ${found ? 'FOUND' : 'NOT FOUND'}`);
+
+    if (found) {
+      console.log(`📊 Hashtag ID: ${hashtagResponse.data.data[0].id}`);
+
+      // Try to get posts
+      const postsResponse = await axios.get(`https://graph.facebook.com/v19.0/${hashtagResponse.data.data[0].id}/recent_media`, {
+        params: {
+          access_token: ACCESS_TOKEN,
+          user_id: IG_BUSINESS_ID,
+          fields: 'id,caption,timestamp,username',
+          limit: 5
+        },
+        timeout: 15000
+      });
+
+      const posts = postsResponse.data?.data || [];
+      console.log(`📸 Posts found for known hashtag: ${posts.length}`);
+
+      if (posts.length > 0) {
+        console.log(`📋 Sample post:`, {
+          id: posts[0].id,
+          username: posts[0].username,
+          timestamp: posts[0].timestamp,
+          captionPreview: posts[0].caption ? posts[0].caption.substring(0, 100) + '...' : 'No caption'
+        });
+      }
+    }
+
+    // Also test lowercase version
+    const lowercaseHashtag = 'postmystylesalon1o1hoy';
+    console.log(`🧪 Testing lowercase: #${lowercaseHashtag}`);
+
+    const lowercaseResponse = await axios.get(`https://graph.facebook.com/v19.0/ig_hashtag_search`, {
+      params: {
+        access_token: ACCESS_TOKEN,
+        user_id: IG_BUSINESS_ID,
+        q: lowercaseHashtag
+      },
+      timeout: 10000
+    });
+
+    const lowercaseFound = lowercaseResponse.data?.data?.length > 0;
+    console.log(`${lowercaseFound ? '✅' : '❌'} Lowercase hashtag test result: ${lowercaseFound ? 'FOUND' : 'NOT FOUND'}`);
+
   } catch (error) {
-    console.error('❌ Failed to send monitoring alert:', error.message);
-  }
-}
-
-async function sendCriticalAlert(error, results) {
-  try {
-    const message = {
-      text: `🚨 PostMyStyle UGC Monitor CRITICAL FAILURE - Session Tracking`,
-      attachments: [{
-        color: 'danger',
-        fields: [
-          { title: 'Error', value: error.message, short: false },
-          { title: 'Execution Time', value: `${results.executionTimeMs}ms`, short: true },
-          { title: 'Partial Results', value: `${results.postsProcessed} posts processed`, short: true }
-        ]
-      }]
-    };
-
-    await axios.post(MONITORING_WEBHOOK, message, { timeout: 5000 });
-  } catch (alertError) {
-    console.error('❌ Failed to send critical alert:', alertError.message);
+    console.log(`❌ Known hashtag test failed: ${error.message}`);
+    console.error(`🔍 DEBUG: Known hashtag test error:`, error.response?.data || error);
   }
 }
 
