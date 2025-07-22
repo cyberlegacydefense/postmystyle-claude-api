@@ -9,7 +9,7 @@ const MONITORING_WEBHOOK = process.env.MONITORING_ALERT_WEBHOOK;
 
 exports.handler = async (event, context) => {
   const startTime = Date.now();
-  console.log('🔍 PostMyStyle UGC Monitor v5.0 - Production Fixed Version');
+  console.log('🔍 PostMyStyle UGC Monitor v6.0 - Complete Production Ready');
   console.log(`🕐 Start time: ${new Date().toISOString()}`);
 
   // Validate environment variables
@@ -37,6 +37,7 @@ exports.handler = async (event, context) => {
       processingErrors: 0,
       sessionIdsFound: 0,
       sessionsUpdated: 0,
+      sessionUpdatesFailed: 0,
       topMediaSuccess: 0,
       recentMediaSuccess: 0,
       fieldPermissionErrors: 0
@@ -58,6 +59,7 @@ exports.handler = async (event, context) => {
 
     console.log(`✅ UGC Monitor Complete: ${results.newDiscoveries} new discoveries, ${results.sessionsCorrelated} sessions correlated`);
     console.log(`📊 Stats: ${results.stats.topMediaSuccess} top_media successes, ${results.stats.recentMediaSuccess} recent_media successes`);
+    console.log(`📊 Updates: ${results.stats.sessionsUpdated} successful, ${results.stats.sessionUpdatesFailed} failed`);
     console.log(`🕐 Total execution time: ${results.executionTimeMs}ms`);
 
     // Send monitoring alert if configured
@@ -98,7 +100,7 @@ async function validateInstagramAPI() {
     console.log(`   IG_BUSINESS_ID: ${IG_BUSINESS_ID ? 'SET' : 'MISSING'} (length: ${IG_BUSINESS_ID?.length || 0})`);
     console.log(`   ACCESS_TOKEN: ${ACCESS_TOKEN ? 'SET' : 'MISSING'} (length: ${ACCESS_TOKEN?.length || 0})`);
     console.log(`   SUPABASE_URL: ${SUPABASE_URL ? 'SET' : 'MISSING'}`);
-    console.log(`   SUPABASE_API_KEY: ${SUPABASE_API_KEY ? 'SET' : 'MISSING'}`);
+    console.log(`   SUPABASE_API_KEY: ${SUPABASE_API_KEY ? 'SET' : 'MISSING'} (length: ${SUPABASE_API_KEY?.length || 0})`);
 
     // Show partial values for debugging (without exposing secrets)
     if (IG_BUSINESS_ID && IG_BUSINESS_ID.length > 6) {
@@ -107,6 +109,15 @@ async function validateInstagramAPI() {
     if (ACCESS_TOKEN && ACCESS_TOKEN.length > 20) {
       console.log(`   ACCESS_TOKEN format: ${ACCESS_TOKEN.substring(0, 10)}...${ACCESS_TOKEN.substring(ACCESS_TOKEN.length - 10)}`);
     }
+
+    // Check service role key format
+    const keyType = SUPABASE_API_KEY ?
+      (SUPABASE_API_KEY.startsWith('eyJ') ?
+        (SUPABASE_API_KEY.length > 150 ? 'SERVICE_ROLE ✅' : 'JWT but short ⚠️') :
+        'NOT_JWT ❌') :
+      'MISSING ❌';
+
+    console.log(`   🔑 Supabase Key Type: ${keyType}`);
 
     // Validate format
     if (!IG_BUSINESS_ID || IG_BUSINESS_ID.length < 10) {
@@ -131,7 +142,7 @@ async function validateInstagramAPI() {
       params: params,
       timeout: 10000,
       headers: {
-        'User-Agent': 'PostMyStyle-UGC-Monitor/5.0'
+        'User-Agent': 'PostMyStyle-UGC-Monitor/6.0'
       }
     });
 
@@ -284,7 +295,7 @@ async function searchSessionHashtag(session, results) {
 
     console.log(`✅ Step 1 SUCCESS: Hashtag found - ID: ${hashtagData.id}`);
 
-    // Step 2: Get posts using improved method
+    // Step 2: Get posts using improved method (top_media first, no username field)
     console.log(`🔍 Step 2: Getting posts for hashtag ID ${hashtagData.id}`);
     const posts = await getHashtagPosts(hashtagData.id, sessionHashtag, results);
 
@@ -311,11 +322,15 @@ async function searchSessionHashtag(session, results) {
             results.newDiscoveries++;
             results.sessionsCorrelated++;
 
-            // Update session status to 'found'
-            await updateSessionDiscoveryStatus(session.id, 'found');
-            results.stats.sessionsUpdated++;
-
-            console.log(`✅ Session ${session.public_tracking_code} marked as found with UGC content`);
+            // Update session status to 'discovered' using service role key
+            const updateSuccess = await updateSessionDiscoveryStatus(session.id, 'discovered');
+            if (updateSuccess) {
+              results.stats.sessionsUpdated++;
+              console.log(`✅ Session ${session.public_tracking_code} marked as discovered`);
+            } else {
+              results.stats.sessionUpdatesFailed++;
+              console.log(`⚠️ Session ${session.public_tracking_code} UGC found but status update failed`);
+            }
           } else {
             results.stats.duplicatesSkipped++;
             console.log(`⚠️ Post already discovered for session ${session.public_tracking_code}`);
@@ -394,7 +409,7 @@ async function getHashtagPosts(hashtagId, hashtagName, results) {
           },
           timeout: 15000,
           headers: {
-            'User-Agent': 'PostMyStyle-UGC-Monitor/5.0'
+            'User-Agent': 'PostMyStyle-UGC-Monitor/6.0'
           }
         });
 
@@ -650,7 +665,50 @@ async function recordSessionUGCDiscovery(ugcData, session) {
 
 async function updateSessionDiscoveryStatus(sessionId, status) {
   try {
-    await axios.patch(
+    console.log(`🔍 DEBUG: Updating session ${sessionId} to status: "${status}"`);
+
+    // Verify API key format (service role should start with 'eyJ' and be long)
+    const keyType = SUPABASE_API_KEY ?
+      (SUPABASE_API_KEY.startsWith('eyJ') ?
+        (SUPABASE_API_KEY.length > 150 ? 'SERVICE_ROLE ✅' : 'JWT but short ⚠️') :
+        'NOT_JWT ❌') :
+      'MISSING ❌';
+
+    console.log(`🔑 API Key Type: ${keyType} (length: ${SUPABASE_API_KEY?.length || 0})`);
+
+    if (!SUPABASE_API_KEY.startsWith('eyJ') || SUPABASE_API_KEY.length < 150) {
+      console.warn(`⚠️ WARNING: API key doesn't look like service role key - RLS bypass may not work`);
+    }
+
+    // Check current record first
+    console.log(`🔍 Step 1: Verifying session exists...`);
+    const checkResponse = await axios.get(
+      `${SUPABASE_URL}/rest/v1/media_send?id=eq.${sessionId}&select=id,ugc_discovery_status,public_tracking_code,stylist_id`,
+      {
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+          'apikey': SUPABASE_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      }
+    );
+
+    if (!checkResponse.data || checkResponse.data.length === 0) {
+      throw new Error(`Session with ID ${sessionId} not found in database`);
+    }
+
+    const currentRecord = checkResponse.data[0];
+    console.log(`✅ Found session record:`, {
+      id: currentRecord.id,
+      currentStatus: currentRecord.ugc_discovery_status,
+      trackingCode: currentRecord.public_tracking_code,
+      stylistId: currentRecord.stylist_id?.substring(0, 8) + '...' // Partial for privacy
+    });
+
+    // Attempt the update with service role headers
+    console.log(`🔍 Step 2: Attempting update with service role bypass...`);
+    const updateResponse = await axios.patch(
       `${SUPABASE_URL}/rest/v1/media_send?id=eq.${sessionId}`,
       {
         ugc_discovery_status: status,
@@ -659,18 +717,82 @@ async function updateSessionDiscoveryStatus(sessionId, status) {
       {
         headers: {
           'Authorization': `Bearer ${SUPABASE_API_KEY}`,
-          'Content-Type': 'application/json',
           'apikey': SUPABASE_API_KEY,
+          'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
         timeout: 10000
       }
     );
 
-    console.log(`📊 Session ${sessionId} status updated to: ${status}`);
+    console.log(`✅ SUCCESS: Session ${sessionId} status updated to "${status}"`);
+    console.log(`📊 Update response status: ${updateResponse.status} ${updateResponse.statusText}`);
+
+    return true;
+
   } catch (error) {
-    console.error(`❌ Failed to update session status:`, error.message);
-    throw error;
+    console.error(`❌ UPDATE FAILED for session ${sessionId}:`);
+    console.error(`   Error: ${error.message}`);
+    console.error(`   HTTP Status: ${error.response?.status} ${error.response?.statusText || ''}`);
+
+    if (error.response?.data) {
+      console.error(`   Supabase Error Details:`, JSON.stringify(error.response.data, null, 2));
+    }
+
+    // Analyze the specific error type
+    if (error.response?.status === 400) {
+      console.log(`🔍 400 Error Analysis: Likely bad request format or constraint violation`);
+    } else if (error.response?.status === 401) {
+      console.log(`🔍 401 Error Analysis: Authentication failed - check API key`);
+    } else if (error.response?.status === 403) {
+      console.log(`🔍 403 Error Analysis: Forbidden - RLS policy blocking update`);
+      console.log(`   💡 Solution: Ensure you're using SERVICE_ROLE key, not anon key`);
+    } else if (error.response?.status === 404) {
+      console.log(`🔍 404 Error Analysis: Session not found or URL incorrect`);
+    }
+
+    // Try alternative approach - update by tracking code instead of UUID
+    try {
+      console.log(`🔍 Step 3: Trying alternative approach - update by tracking code...`);
+      const currentRecord = checkResponse?.data?.[0];
+      if (currentRecord?.public_tracking_code) {
+        const trackingCode = currentRecord.public_tracking_code;
+
+        const altResponse = await axios.patch(
+          `${SUPABASE_URL}/rest/v1/media_send?public_tracking_code=eq.${trackingCode}`,
+          {
+            ugc_discovery_status: status
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_API_KEY}`,
+              'apikey': SUPABASE_API_KEY,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            timeout: 10000
+          }
+        );
+
+        console.log(`✅ SUCCESS with tracking code approach: ${trackingCode}`);
+        return true;
+      }
+
+    } catch (altError) {
+      console.log(`❌ Alternative approach also failed: ${altError.response?.data?.message || altError.message}`);
+    }
+
+    // Log final troubleshooting steps
+    console.log(`\n🔧 TROUBLESHOOTING STEPS:`);
+    console.log(`   1. Verify SUPABASE_API_KEY is the SERVICE_ROLE key (not anon key)`);
+    console.log(`   2. Check if service_role key bypasses RLS in Supabase dashboard`);
+    console.log(`   3. Consider adding UGC-specific RLS policy as fallback`);
+    console.log(`   Current API key length: ${SUPABASE_API_KEY?.length || 0} chars`);
+    console.log(`   Should be 200+ chars and start with 'eyJ'`);
+
+    // Don't throw error - let UGC discovery continue working
+    console.log(`⚠️ Status update failed, but UGC discovery was successful`);
+    return false;
   }
 }
 
@@ -756,7 +878,7 @@ async function sendMonitoringAlert(results) {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*UGC Discovery Report*\n• New discoveries: ${results.newDiscoveries}\n• Sessions correlated: ${results.sessionsCorrelated}\n• Execution time: ${results.executionTimeMs}ms`
+            text: `*UGC Discovery Report*\n• New discoveries: ${results.newDiscoveries}\n• Sessions correlated: ${results.sessionsCorrelated}\n• Status updates: ${results.stats.sessionsUpdated}/${results.stats.sessionsUpdated + results.stats.sessionUpdatesFailed}\n• Execution time: ${results.executionTimeMs}ms`
           }
         }
       ]
