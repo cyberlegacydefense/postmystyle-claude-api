@@ -730,153 +730,34 @@ async function getHashtagPosts(hashtagId, hashtagName) {
 
 // NEW: Test the known working hashtag from local test
 // Enhanced version of testKnownWorkingHashtag for deeper debugging
+// Replace your testKnownWorkingHashtag function with this minimal version first:
 async function testKnownWorkingHashtag(results) {
   console.log(`\n${'='.repeat(60)}`);
-  console.log('🧪 ENHANCED KNOWN HASHTAG DEBUGGING');
+  console.log('🧪 MINIMAL HASHTAG TEST');
 
   try {
-    // Test multiple variations of the known hashtag
-    const hashtagVariations = [
-      'postmystylesalon1O1HOY',     // Original from logs
-      'PostMyStylesalon1O1HOY',     // Actual posted version
-      'postmystylesalon1o1hoy',     // All lowercase
-      'POSTMYSTYLESALON1O1HOY'      // All uppercase
-    ];
+    console.log('🔍 Testing known hashtag...');
 
-    for (const hashtag of hashtagVariations) {
-      console.log(`\n🔍 TESTING HASHTAG VARIATION: #${hashtag}`);
+    const response = await axios.get(`https://graph.facebook.com/v19.0/ig_hashtag_search`, {
+      params: {
+        access_token: ACCESS_TOKEN,
+        user_id: IG_BUSINESS_ID,
+        q: 'PostMyStylesalon1O1HOY'  // Try the exact case you mentioned
+      },
+      timeout: 10000
+    });
 
-      try {
-        // Step 1: Search for hashtag
-        const hashtagResponse = await axios.get(`https://graph.facebook.com/v19.0/ig_hashtag_search`, {
-          params: {
-            access_token: ACCESS_TOKEN,
-            user_id: IG_BUSINESS_ID,
-            q: hashtag
-          },
-          timeout: 10000
-        });
+    const found = response.data?.data?.length > 0;
+    console.log(`Result: ${found ? '✅ FOUND' : '❌ NOT FOUND'}`);
 
-        const found = hashtagResponse.data?.data?.length > 0;
-        console.log(`   Search result: ${found ? '✅ FOUND' : '❌ NOT FOUND'}`);
-
-        if (found) {
-          const hashtagId = hashtagResponse.data.data[0].id;
-          console.log(`   Hashtag ID: ${hashtagId}`);
-
-          // Step 2: Try both recent_media and top_media endpoints
-          const endpoints = [
-            { name: 'recent_media', url: `https://graph.facebook.com/v19.0/${hashtagId}/recent_media` },
-            { name: 'top_media', url: `https://graph.facebook.com/v19.0/${hashtagId}/top_media` }
-          ];
-
-          for (const endpoint of endpoints) {
-            console.log(`   🔍 Testing ${endpoint.name}...`);
-
-            try {
-              const postsResponse = await axios.get(endpoint.url, {
-                params: {
-                  access_token: ACCESS_TOKEN,
-                  user_id: IG_BUSINESS_ID,
-                  fields: 'id,caption,timestamp,username,media_type,permalink',
-                  limit: 10
-                },
-                timeout: 15000
-              });
-
-              const posts = postsResponse.data?.data || [];
-              console.log(`   ${endpoint.name}: ${posts.length} posts found`);
-
-              if (posts.length > 0) {
-                console.log(`   📋 First post details:`);
-                const firstPost = posts[0];
-                console.log(`      ID: ${firstPost.id}`);
-                console.log(`      Username: ${firstPost.username || 'N/A'}`);
-                console.log(`      Timestamp: ${firstPost.timestamp}`);
-                console.log(`      Media Type: ${firstPost.media_type}`);
-                console.log(`      Permalink: ${firstPost.permalink || 'N/A'}`);
-                console.log(`      Caption Preview: ${firstPost.caption ? firstPost.caption.substring(0, 200) + '...' : 'No caption'}`);
-
-                // Check if caption contains the expected hashtag
-                if (firstPost.caption) {
-                  const hasPostMyStyle = firstPost.caption.toLowerCase().includes('postmystyle');
-                  const hasSalon = firstPost.caption.toLowerCase().includes('salon');
-                  const hasExpectedCode = firstPost.caption.toLowerCase().includes('1o1hoy');
-                  console.log(`      Caption Analysis:`);
-                  console.log(`         Contains 'postmystyle': ${hasPostMyStyle ? '✅' : '❌'}`);
-                  console.log(`         Contains 'salon': ${hasSalon ? '✅' : '❌'}`);
-                  console.log(`         Contains '1o1hoy': ${hasExpectedCode ? '✅' : '❌'}`);
-                }
-              }
-
-            } catch (endpointError) {
-              console.log(`   ❌ ${endpoint.name} failed: ${endpointError.message}`);
-              console.log(`   Error details:`, endpointError.response?.data || endpointError);
-            }
-          }
-
-          // Step 3: Try different field combinations
-          console.log(`   🔍 Testing minimal fields...`);
-          try {
-            const minimalResponse = await axios.get(`https://graph.facebook.com/v19.0/${hashtagId}/recent_media`, {
-              params: {
-                access_token: ACCESS_TOKEN,
-                user_id: IG_BUSINESS_ID,
-                fields: 'id,caption',  // Minimal fields
-                limit: 5
-              },
-              timeout: 15000
-            });
-
-            const minimalPosts = minimalResponse.data?.data || [];
-            console.log(`   Minimal fields result: ${minimalPosts.length} posts`);
-
-          } catch (minimalError) {
-            console.log(`   ❌ Minimal fields failed: ${minimalError.message}`);
-            console.log(`   Minimal error:`, minimalError.response?.data || minimalError);
-          }
-
-        } else {
-          console.log(`   No hashtag ID returned for #${hashtag}`);
-        }
-
-      } catch (searchError) {
-        console.log(`   ❌ Search failed for #${hashtag}: ${searchError.message}`);
-        console.log(`   Search error:`, searchError.response?.data || searchError);
-      }
-
-      // Small delay between variations
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-
-    // Additional test: Try searching for just "postmystyle" to see what hashtags exist
-    console.log(`\n🔍 SEARCHING FOR ALL POSTMYSTYLE HASHTAGS:`);
-    try {
-      const allHashtagsResponse = await axios.get(`https://graph.facebook.com/v19.0/ig_hashtag_search`, {
-        params: {
-          access_token: ACCESS_TOKEN,
-          user_id: IG_BUSINESS_ID,
-          q: 'postmystyle'
-        },
-        timeout: 10000
-      });
-
-      const allHashtags = allHashtagsResponse.data?.data || [];
-      console.log(`Found ${allHashtags.length} postmystyle-related hashtags:`);
-      allHashtags.forEach((hashtag, index) => {
-        console.log(`   ${index + 1}. ID: ${hashtag.id}, Name: ${hashtag.name || 'N/A'}`);
-      });
-
-    } catch (allHashtagsError) {
-      console.log(`❌ All hashtags search failed: ${allHashtagsError.message}`);
+    if (found) {
+      console.log(`Hashtag ID: ${response.data.data[0].id}`);
     }
 
   } catch (error) {
-    console.log(`❌ Enhanced hashtag test failed: ${error.message}`);
-    console.error(`🔍 DEBUG: Enhanced test error:`, error.response?.data || error);
+    console.log(`❌ Test failed: ${error.message}`);
   }
 }
-
 
 
 
