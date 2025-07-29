@@ -356,34 +356,25 @@
         </div>
     </div>
 
-    <!-- Hidden form for download tracking -->
-    <form name="download-tracking" method="POST" data-netlify="true" netlify hidden>
+    <!-- Hidden form for download tracking - must be visible to Netlify -->
+    <form name="download-tracking" method="POST" data-netlify="true" style="display: none;">
         <input type="hidden" name="form-name" value="download-tracking">
-        <input name="user-name">
-        <input name="user-email">
-        <input name="download-time">
+        <input type="text" name="user-name">
+        <input type="email" name="user-email">
+        <input type="text" name="download-time">
+        <button type="submit">Submit</button>
     </form>
 
-    <!-- Static forms for Netlify detection - keep hidden -->
-    <div style="display: none;">
-        <!-- Static registration form for Netlify to detect -->
-        <form name="beta-registration-static" netlify>
-            <input type="text" name="name">
-            <input type="email" name="email">
-            <input type="text" name="business">
-            <input type="text" name="role">
-            <input type="tel" name="phone">
-            <textarea name="feedback"></textarea>
-            <input type="text" name="registered-at">
-        </form>
-
-        <!-- Static download tracking form -->
-        <form name="download-tracking-static" netlify>
-            <input type="text" name="user-name">
-            <input type="email" name="user-email">
-            <input type="text" name="download-time">
-        </form>
-    </div>
+    <!-- Static form for Netlify detection -->
+    <form name="beta-registration-static" method="POST" data-netlify="true" style="display: none;">
+        <input type="text" name="name">
+        <input type="email" name="email">
+        <input type="text" name="business">
+        <input type="text" name="role">
+        <input type="text" name="phone">
+        <input type="text" name="feedback">
+        <button type="submit">Submit</button>
+    </form>
 </div>
 
 <script>
@@ -490,13 +481,10 @@
             formData.append('role', data.role);
             formData.append('phone', data.phone || 'Not provided');
             formData.append('feedback', data.feedback || 'None');
-            formData.append('registered-at', new Date().toISOString());
 
             const response = await fetch('/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams(formData).toString()
             });
 
@@ -516,16 +504,14 @@
 
         try {
             const formData = new FormData();
-            formData.append('form-name', 'download-tracking-static');
+            formData.append('form-name', 'download-tracking');
             formData.append('user-name', userData.name);
             formData.append('user-email', userData.email);
             formData.append('download-time', userData.downloadTime);
 
             const response = await fetch('/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams(formData).toString()
             });
 
