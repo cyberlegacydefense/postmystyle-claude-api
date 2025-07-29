@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>PostMyStyle.AI - Beta Testing Program</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -19,6 +20,8 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
         }
 
         .container {
@@ -94,13 +97,26 @@
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 1.1rem;
+            padding: 18px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
             transition: transform 0.2s ease;
+            line-height: 1.4;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 56px;
+            text-decoration: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: manipulation;
         }
 
         .btn:hover {
@@ -111,6 +127,13 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            padding: 20px 24px;
         }
 
         .download-section {
@@ -129,11 +152,6 @@
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        .download-btn {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            margin-bottom: 20px;
         }
 
         .instructions {
@@ -168,6 +186,95 @@
         .success {
             color: #28a745;
             font-weight: 600;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                margin: 10px 0;
+            }
+
+            .logo {
+                font-size: 2rem;
+                line-height: 1.2;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 25px;
+            }
+
+            .beta-badge {
+                font-size: 0.85rem;
+                padding: 6px 12px;
+                margin-bottom: 25px;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            input, select, textarea {
+                padding: 14px 12px;
+                font-size: 16px; /* Prevents zoom on iOS */
+                border-radius: 8px;
+            }
+
+            .btn {
+                padding: 16px 20px;
+                font-size: 1rem;
+                min-height: 50px;
+                border-radius: 8px;
+            }
+
+            .download-btn {
+                padding: 18px 20px;
+                font-size: 1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .instructions {
+                padding: 12px;
+                margin-top: 12px;
+            }
+
+            .instructions h4 {
+                font-size: 1rem;
+                margin-bottom: 8px;
+            }
+
+            .instructions ol {
+                margin-left: 16px;
+            }
+
+            .instructions li {
+                font-size: 0.9rem;
+                margin-bottom: 4px;
+                line-height: 1.4;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .download-btn {
+                font-size: 0.95rem;
+                padding: 16px 15px;
+            }
         }
     </style>
 </head>
@@ -233,7 +340,7 @@
         <p>Thank you for joining! Download the PostMyStyle.AI beta app below:</p>
 
         <a href="#" class="btn download-btn" id="downloadBtn">
-            📱 Download PostMyStyle.AI Beta
+            📱 Download Beta App
         </a>
 
         <div class="instructions">
@@ -346,7 +453,7 @@
         sendDownloadNotification(userData);
 
         // Update button to show downloaded
-        this.textContent = '✅ Downloaded! Check your device';
+        this.textContent = '✅ Downloaded!';
         this.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
     });
 
