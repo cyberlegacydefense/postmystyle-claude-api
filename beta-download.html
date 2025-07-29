@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostMyStyle.AI - Beta Testing Program</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .beta-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .download-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .download-section.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            text-align: left;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            color: #856404;
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .success {
+            color: #28a745;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">PostMyStyle.AI</div>
+    <div class="subtitle">Transform Your Salon's Marketing with AI</div>
+    <div class="beta-badge">🚀 Exclusive Beta Access</div>
+
+    <form id="registrationForm" name="beta-registration" netlify-honeypot="bot-field" data-netlify="true">
+        <!-- Hidden fields for Netlify Forms -->
+        <input type="hidden" name="form-name" value="beta-registration">
+        <input type="hidden" name="bot-field">
+
+        <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" required>
+            <div class="error" id="nameError"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" required>
+            <div class="error" id="emailError"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="business">Business/Salon Name</label>
+            <input type="text" id="business" name="business">
+        </div>
+
+        <div class="form-group">
+            <label for="role">Your Role *</label>
+            <select id="role" name="role" required>
+                <option value="">Select your role</option>
+                <option value="salon-owner">Salon Owner</option>
+                <option value="stylist">Hair Stylist</option>
+                <option value="esthetician">Esthetician</option>
+                <option value="nail-tech">Nail Technician</option>
+                <option value="manager">Salon Manager</option>
+                <option value="other">Other</option>
+            </select>
+            <div class="error" id="roleError"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone Number (for testing support)</label>
+            <input type="tel" id="phone" name="phone">
+        </div>
+
+        <div class="form-group">
+            <label for="feedback">What aspects are you most interested in testing?</label>
+            <textarea id="feedback" name="feedback" rows="3" placeholder="e.g., SMS automation, AI messaging, client engagement features..."></textarea>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+            Join Beta Program & Download App
+        </button>
+    </form>
+
+    <div class="download-section" id="downloadSection">
+        <h3 class="success">✅ Welcome to the Beta Program!</h3>
+        <p>Thank you for joining! Download the PostMyStyle.AI beta app below:</p>
+
+        <a href="#" class="btn download-btn" id="downloadBtn">
+            📱 Download PostMyStyle.AI Beta (117MB)
+        </a>
+
+        <div class="instructions">
+            <h4>📋 Installation Instructions:</h4>
+            <ol>
+                <li><strong>Download</strong> the app file to your Android device</li>
+                <li><strong>Open Settings</strong> → Security & Privacy</li>
+                <li><strong>Enable "Install unknown apps"</strong> for your browser/download app</li>
+                <li><strong>Tap the downloaded file</strong> to install</li>
+                <li><strong>Open PostMyStyle.AI</strong> and start testing!</li>
+            </ol>
+            <p><strong>Need help?</strong> Text or call the number you provided above.</p>
+        </div>
+    </div>
+
+    <!-- Hidden form for download tracking -->
+    <form name="download-tracking" netlify hidden>
+        <input type="hidden" name="form-name" value="download-tracking">
+        <input name="user-name">
+        <input name="user-email">
+        <input name="download-time">
+    </form>
+</div>
+
+<script>
+    // Configuration - Update these with your actual URLs
+    const CONFIG = {
+        // Google Drive direct download URL
+        APK_DOWNLOAD_URL: 'https://drive.google.com/uc?export=download&id=17Xkj4mYhZaTh40ocaPuYeujthPRh-Jgz',
+
+        // Notification endpoints
+        NOTIFICATION_EMAIL: 'YOUR_EMAIL@example.com', // Replace with your email
+        NETLIFY_FORM_ENDPOINT: '/',
+        WEBHOOK_URL: ''
+    };
+
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Clear previous errors
+        document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+        // Get form data
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        // Basic validation
+        let isValid = true;
+
+        if (!data.name.trim()) {
+            document.getElementById('nameError').textContent = 'Name is required';
+            isValid = false;
+        }
+
+        if (!data.email.trim()) {
+            document.getElementById('emailError').textContent = 'Email is required';
+            isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+            document.getElementById('emailError').textContent = 'Please enter a valid email';
+            isValid = false;
+        }
+
+        if (!data.role) {
+            document.getElementById('roleError').textContent = 'Please select your role';
+            isValid = false;
+        }
+
+        if (isValid) {
+            // Store registration data
+            console.log('Beta tester registered:', data);
+
+            // Send registration to Netlify Forms (optional)
+            sendRegistrationData(data);
+
+            // Show download section
+            document.getElementById('downloadSection').classList.add('show');
+
+            // Scroll to download section
+            document.getElementById('downloadSection').scrollIntoView({
+                behavior: 'smooth'
+            });
+
+            // Disable form
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Registered ✓';
+        }
+    });
+
+    // Handle download from Cloudinary with notification
+    document.getElementById('downloadBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+
+        const userData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            business: document.getElementById('business').value,
+            role: document.getElementById('role').value,
+            downloadTime: new Date().toISOString()
+        };
+
+        // Trigger download
+        const link = document.createElement('a');
+        link.href = CONFIG.APK_DOWNLOAD_URL;
+        link.download = 'PostMyStyle-Beta.apk';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Send download notification
+        sendDownloadNotification(userData);
+
+        // Update button to show downloaded
+        this.textContent = '✅ Downloaded! Check your device';
+        this.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+    });
+
+    // Send registration data to Netlify Forms
+    async function sendRegistrationData(data) {
+        try {
+            const formData = new FormData();
+            formData.append('form-name', 'beta-registration');
+            formData.append('name', data.name);
+            formData.append('email', data.email);
+            formData.append('business', data.business || 'Not provided');
+            formData.append('role', data.role);
+            formData.append('phone', data.phone || 'Not provided');
+            formData.append('feedback', data.feedback || 'None');
+            formData.append('registered-at', new Date().toISOString());
+
+            await fetch('/', {
+                method: 'POST',
+                body: formData
+            });
+        } catch (error) {
+            console.error('Registration submission error:', error);
+        }
+    }
+
+    // Send download notification
+    async function sendDownloadNotification(userData) {
+        // Method 1: EmailJS (requires EmailJS account - free)
+        if (typeof emailjs !== 'undefined') {
+            try {
+                await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', {
+                    to_email: CONFIG.NOTIFICATION_EMAIL,
+                    user_name: userData.name,
+                    user_email: userData.email,
+                    user_business: userData.business,
+                    user_role: userData.role,
+                    download_time: userData.downloadTime
+                });
+            } catch (error) {
+                console.error('Email notification error:', error);
+            }
+        }
+
+        // Method 2: Webhook (for Zapier, Make.com, etc.)
+        if (CONFIG.WEBHOOK_URL) {
+            try {
+                await fetch(CONFIG.WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        event: 'beta_app_download',
+                        ...userData
+                    })
+                });
+            } catch (error) {
+                console.error('Webhook notification error:', error);
+            }
+        }
+
+        // Method 3: Netlify Forms for download tracking
+        try {
+            const formData = new FormData();
+            formData.append('form-name', 'download-tracking');
+            formData.append('user-name', userData.name);
+            formData.append('user-email', userData.email);
+            formData.append('download-time', userData.downloadTime);
+
+            await fetch('/', {
+                method: 'POST',
+                body: formData
+            });
+        } catch (error) {
+            console.error('Download tracking error:', error);
+        }
+    }
+</script>
+
+<!-- EmailJS for notifications (optional - uncomment if using) -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+    emailjs.init('YOUR_PUBLIC_KEY'); // Get from EmailJS dashboard
+</script> -->
+</body>
+</html>
