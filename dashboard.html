@@ -2450,28 +2450,61 @@
   const supabaseUrl = 'https://mffqaqvjylkotkgvytro.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZnFhcXZqeWxrb3RrZ3Z5dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTI5MzYsImV4cCI6MjA2MTY4ODkzNn0.oUlS-JS1G9OHjwv89xZY_QRqwsoI-GE8c-ZE_U2TjDc';
 
-// CLAUDE API CONFIGURATION - Now using secure proxy
+// CLAUDE API CONFIGURATION - Unified secure proxy implementation
 const CLAUDE_API_URL = '/.netlify/functions/anthropic-proxy';
 
-async function callClaude(messages, model = "claude-3-sonnet-20240229", maxTokens = 1000) {
-    const response = await fetch(CLAUDE_API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            model: model,
-            max_tokens: maxTokens,
-            messages: messages
-        })
-    });
+/**
+ * Unified Claude API call function
+ * @param {string|Array} input - Either a simple prompt string OR array of message objects
+ * @param {string} model - Claude model to use
+ * @param {number} maxTokens - Maximum tokens to generate
+ * @returns {Promise} - Claude API response
+ */
+async function callClaude(input, model = "claude-3-haiku-20240307", maxTokens = 400) {
+    try {
+        console.log('🤖 Calling Claude API via secure proxy...');
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Claude API error: ${error.error || response.statusText}`);
+        // Handle both prompt string and messages array
+        let messages;
+        if (typeof input === 'string') {
+            // Simple prompt string
+            messages = [{
+                role: 'user',
+                content: input
+            }];
+        } else if (Array.isArray(input)) {
+            // Already formatted messages array
+            messages = input;
+        } else {
+            throw new Error('Input must be either a string prompt or messages array');
+        }
+
+        const response = await fetch(CLAUDE_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                // No API key needed - the proxy handles it securely!
+            },
+            body: JSON.stringify({
+                model: model,
+                max_tokens: maxTokens,
+                messages: messages
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Claude API error: ${error.error || response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Claude API call successful');
+        return result;
+
+    } catch (error) {
+        console.error('❌ Claude API call failed:', error);
+        throw error;
     }
-
-    return await response.json();
 }
 
   let supabase = null;
@@ -2662,42 +2695,7 @@ They want to optimize their service offerings. Based on their current performanc
     return prompts[questionType] || `${basePrompt} ${businessMetrics} Provide specific, actionable advice for their salon business growth.`;
   };
 
-  // CLAUDE API CONFIGURATION - Now using secure proxy
-const CLAUDE_API_URL = '/.netlify/functions/anthropic-proxy';
 
-// Updated Claude API call (replace your existing callClaude function)
-const callClaude = async (prompt) => {
-  try {
-    console.log('🤖 Calling Claude API via secure proxy...');
-
-    const response = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-        // No API key needed here - the proxy handles it securely!
-      },
-      body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 400,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Claude API error: ${error.error || response.statusText}`);
-    }
-
-    return await response.json();
-
-  } catch (error) {
-    console.error('❌ Claude API call failed:', error);
-    throw error;
-  }
-};
 
   // Enhanced fallback messages
   const getFallbackMessage = (stage, salonOwnerName, analyticsData) => {
