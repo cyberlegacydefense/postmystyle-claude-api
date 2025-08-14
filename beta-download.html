@@ -129,8 +129,8 @@
             transform: none;
         }
 
-        .download-btn {
-            background: linear-gradient(135deg, #28a745, #20c997);
+        .playstore-btn {
+            background: linear-gradient(135deg, #34A853, #4285F4);
             margin-bottom: 20px;
             font-size: 1.1rem;
             padding: 20px 24px;
@@ -156,20 +156,20 @@
 
         .instructions {
             text-align: left;
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background: #e8f5e8;
+            border: 1px solid #28a745;
             border-radius: 10px;
             padding: 15px;
             margin-top: 15px;
         }
 
         .instructions h4 {
-            color: #856404;
+            color: #155724;
             margin-bottom: 10px;
         }
 
         .instructions ol {
-            color: #856404;
+            color: #155724;
             margin-left: 20px;
         }
 
@@ -232,7 +232,7 @@
                 border-radius: 8px;
             }
 
-            .download-btn {
+            .playstore-btn {
                 padding: 18px 20px;
                 font-size: 1rem;
                 white-space: nowrap;
@@ -271,7 +271,7 @@
                 font-size: 1.8rem;
             }
 
-            .download-btn {
+            .playstore-btn {
                 font-size: 0.95rem;
                 padding: 16px 15px;
             }
@@ -331,26 +331,25 @@
         </div>
 
         <button type="submit" class="btn" id="submitBtn">
-            Join Beta Program & Download App
+            Join Beta Program & Get App
         </button>
     </form>
 
     <div class="download-section" id="downloadSection">
         <h3 class="success">✅ Welcome to the Beta Program!</h3>
-        <p>Thank you for joining! Download the PostMyStyle.AI beta app below:</p>
+        <p>Thank you for joining! Get the PostMyStyle.AI app from Google Play:</p>
 
-        <a href="#" class="btn download-btn" id="downloadBtn">
-            📱 Download Beta App
+        <a href="#" class="btn playstore-btn" id="playstoreBtn" target="_blank" rel="noopener noreferrer">
+            📱 Get it on Google Play
         </a>
 
         <div class="instructions">
-            <h4>📋 Installation Instructions:</h4>
+            <h4>📋 Quick Setup:</h4>
             <ol>
-                <li><strong>Download</strong> the app file to your Android device</li>
-                <li><strong>Open Settings</strong> → Security & Privacy</li>
-                <li><strong>Enable "Install unknown apps"</strong> for your browser/download app</li>
-                <li><strong>Tap the downloaded file</strong> to install</li>
+                <li><strong>Tap the button above</strong> to open Google Play Store</li>
+                <li><strong>Install the app</strong> from the Play Store</li>
                 <li><strong>Open PostMyStyle.AI</strong> and start testing!</li>
+                <li><strong>Share your feedback</strong> - your input shapes the final product</li>
             </ol>
             <p><strong>Need help?</strong> Email us at <a href="mailto:help@postmystyle.ai">help@postmystyle.ai</a></p>
         </div>
@@ -361,7 +360,7 @@
         <input type="hidden" name="form-name" value="download-tracking">
         <input type="text" name="user-name">
         <input type="email" name="user-email">
-        <input type="text" name="download-time">
+        <input type="text" name="access-time">
         <button type="submit">Submit</button>
     </form>
 
@@ -378,10 +377,10 @@
 </div>
 
 <script>
-    // Configuration - Updated with your actual details
+    // Configuration - Updated with Google Play Store link
     const CONFIG = {
-        // Your MEGA public link - no scary warnings!
-        APK_DOWNLOAD_URL: 'https://mega.nz/file/ftwjhT6K#dZPK1e5rzD8oZI2Xd2AYdSveWv_k0P_RKiVR7rlIwrk',
+        // Google Play Store link for your app
+        PLAYSTORE_URL: 'https://play.google.com/store/apps/details?id=com.frizzo1999.PostMyStyleappv4',
 
         // Your notification email
         NOTIFICATION_EMAIL: 'franco.rizzo@postmystyle.ai',
@@ -424,8 +423,11 @@
             // Store registration data
             console.log('Beta tester registered:', data);
 
-            // Send registration to Netlify Forms (optional)
+            // Send registration to Netlify Forms
             sendRegistrationData(data);
+
+            // Set up the Play Store link
+            document.getElementById('playstoreBtn').href = CONFIG.PLAYSTORE_URL;
 
             // Show download section
             document.getElementById('downloadSection').classList.add('show');
@@ -441,32 +443,24 @@
         }
     });
 
-    // Handle download from Cloudinary with notification
-    document.getElementById('downloadBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-
+    // Handle Play Store access tracking
+    document.getElementById('playstoreBtn').addEventListener('click', function(e) {
         const userData = {
             name: document.getElementById('name').value,
             email: document.getElementById('email').value,
             business: document.getElementById('business').value,
             role: document.getElementById('role').value,
-            downloadTime: new Date().toISOString()
+            accessTime: new Date().toISOString()
         };
 
-        // Trigger download
-        const link = document.createElement('a');
-        link.href = CONFIG.APK_DOWNLOAD_URL;
-        link.download = 'PostMyStyle-Beta.apk';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Send access notification
+        sendAccessNotification(userData);
 
-        // Send download notification
-        sendDownloadNotification(userData);
-
-        // Update button to show downloaded
-        this.textContent = '✅ Downloaded!';
-        this.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+        // Update button to show accessed
+        setTimeout(() => {
+            this.textContent = '✅ Opened Play Store!';
+            this.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+        }, 1000);
     });
 
     // Send registration data to Netlify Forms
@@ -498,16 +492,16 @@
         }
     }
 
-    // Send download notification
-    async function sendDownloadNotification(userData) {
-        console.log('Sending download notification...', userData);
+    // Send Play Store access notification
+    async function sendAccessNotification(userData) {
+        console.log('Sending Play Store access notification...', userData);
 
         try {
             const formData = new FormData();
             formData.append('form-name', 'download-tracking');
             formData.append('user-name', userData.name);
             formData.append('user-email', userData.email);
-            formData.append('download-time', userData.downloadTime);
+            formData.append('access-time', userData.accessTime);
 
             const response = await fetch('/', {
                 method: 'POST',
@@ -516,12 +510,12 @@
             });
 
             if (response.ok) {
-                console.log('Download tracking sent successfully');
+                console.log('Play Store access tracking sent successfully');
             } else {
-                console.error('Download tracking failed:', response.status);
+                console.error('Play Store access tracking failed:', response.status);
             }
         } catch (error) {
-            console.error('Download tracking error:', error);
+            console.error('Play Store access tracking error:', error);
         }
     }
 </script>

@@ -2450,9 +2450,29 @@
   const supabaseUrl = 'https://mffqaqvjylkotkgvytro.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mZnFhcXZqeWxrb3RrZ3Z5dHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMTI5MzYsImV4cCI6MjA2MTY4ODkzNn0.oUlS-JS1G9OHjwv89xZY_QRqwsoI-GE8c-ZE_U2TjDc';
 
-  // CLAUDE API CONFIGURATION
-  const CLAUDE_API_KEY = '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';
-  const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+// CLAUDE API CONFIGURATION - Now using secure proxy
+const CLAUDE_API_URL = '/.netlify/functions/anthropic-proxy';
+
+async function callClaude(messages, model = "claude-3-sonnet-20240229", maxTokens = 1000) {
+    const response = await fetch(CLAUDE_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            model: model,
+            max_tokens: maxTokens,
+            messages: messages
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Claude API error: ${error.error || response.statusText}`);
+    }
+
+    return await response.json();
+}
 
   let supabase = null;
 
@@ -2642,54 +2662,42 @@ They want to optimize their service offerings. Based on their current performanc
     return prompts[questionType] || `${basePrompt} ${businessMetrics} Provide specific, actionable advice for their salon business growth.`;
   };
 
-  // Direct Claude API call
-  const callClaude = async (prompt) => {
-    try {
-      console.log('🤖 Calling Claude API directly...');
+  // CLAUDE API CONFIGURATION - Now using secure proxy
+const CLAUDE_API_URL = '/.netlify/functions/anthropic-proxy';
 
-      const response = await fetch(CLAUDE_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 400,
-          messages: [{
-            role: 'user',
-            content: prompt
-          }]
-        })
-      });
+// Updated Claude API call (replace your existing callClaude function)
+const callClaude = async (prompt) => {
+  try {
+    console.log('🤖 Calling Claude API via secure proxy...');
 
-      console.log('📡 Response status:', response.status);
+    const response = await fetch(CLAUDE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        // No API key needed here - the proxy handles it securely!
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`Claude API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('📡 Claude API response received');
-
-      if (data.error) {
-        if (data.error.type === 'overloaded_error') {
-          throw new Error('OVERLOADED');
-        }
-        throw new Error(data.error.message || 'API Error');
-      }
-
-      if (data.content && data.content[0]) {
-        return data.content[0].text.trim();
-      } else {
-        throw new Error('No content returned from Claude API');
-      }
-    } catch (error) {
-      console.error('Claude API error:', error.message);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Claude API error: ${error.error || response.statusText}`);
     }
-  };
+
+    return await response.json();
+
+  } catch (error) {
+    console.error('❌ Claude API call failed:', error);
+    throw error;
+  }
+};
 
   // Enhanced fallback messages
   const getFallbackMessage = (stage, salonOwnerName, analyticsData) => {
@@ -5934,7 +5942,7 @@ Welcome to the team! 🎉`;
   console.log('  • Chart.js:', typeof Chart !== 'undefined' ? '✅ Ready' : '❌ Missing');
   console.log('  • Supabase (window.supabase):', typeof window.supabase !== 'undefined' ? '✅ Ready' : '⏳ Loading...');
   console.log('  • Supabase (window.Supabase):', typeof window.Supabase !== 'undefined' ? '✅ Available' : '❌ Not found');
-  console.log('  • Claude API Key:', CLAUDE_API_KEY ? '✅ Configured' : '❌ Missing');
+  console.log('  • Claude API:', '✅ Using secure proxy');
 
   console.log('💡 Available debug commands:');
   console.log('  • window.debugDashboard.testSupabaseConnection() - Test database connection');
